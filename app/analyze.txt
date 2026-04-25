@@ -1,0 +1,189 @@
+Analyzing jansetu...                                            
+
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:1:1 • expected_executable
+  error • Undefined class 'TTS' • lib/core/services/tts_service.dart:1:3 • undefined_class
+   info • The variable name 'Implementation' isn't a lowerCamelCase identifier • lib/core/services/tts_service.dart:1:7 • non_constant_identifier_names
+  error • Expected to find ';' • lib/core/services/tts_service.dart:1:7 • expected_token
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:1:22 • prefer_typing_uninitialized_variables
+   info • The variable name 'Tasks' isn't a lowerCamelCase identifier • lib/core/services/tts_service.dart:1:22 • non_constant_identifier_names
+  error • Expected to find ';' • lib/core/services/tts_service.dart:1:22 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:1:22 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:3:1 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:3:3 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:3:4 • prefer_typing_uninitialized_variables
+  error • Expected to find ';' • lib/core/services/tts_service.dart:3:4 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:3:4 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:3:5 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:3:7 • prefer_typing_uninitialized_variables
+   info • The variable name 'Add' isn't a lowerCamelCase identifier • lib/core/services/tts_service.dart:3:7 • non_constant_identifier_names
+  error • Expected to find ';' • lib/core/services/tts_service.dart:3:7 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:3:7 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:3:11 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:3:12 • prefer_typing_uninitialized_variables
+   info • The variable name 'flutter_tts' isn't a lowerCamelCase identifier • lib/core/services/tts_service.dart:3:12 • non_constant_identifier_names
+  error • Expected to find ';' • lib/core/services/tts_service.dart:3:12 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:3:12 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:3:23 • expected_executable
+  error • Functions must have an explicit list of parameters • lib/core/services/tts_service.dart:3:25 • missing_function_parameters
+  error • A function body must be provided • lib/core/services/tts_service.dart:3:35 • missing_function_body
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:3:35 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:4:1 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:4:3 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:4:4 • prefer_typing_uninitialized_variables
+  error • Expected to find ';' • lib/core/services/tts_service.dart:4:4 • expected_token
+  error • The name 'x' is already defined • lib/core/services/tts_service.dart:4:4 • duplicate_definition
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:4:4 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:4:5 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:4:7 • prefer_typing_uninitialized_variables
+   info • The variable name 'Create' isn't a lowerCamelCase identifier • lib/core/services/tts_service.dart:4:7 • non_constant_identifier_names
+  error • Expected to find ';' • lib/core/services/tts_service.dart:4:7 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:4:7 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:4:14 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:4:15 • prefer_typing_uninitialized_variables
+   info • The variable name 'TtsService' isn't a lowerCamelCase identifier • lib/core/services/tts_service.dart:4:15 • non_constant_identifier_names
+  error • Expected to find ';' • lib/core/services/tts_service.dart:4:15 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:4:15 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:4:25 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:4:27 • prefer_typing_uninitialized_variables
+  error • 'for' can't be used as an identifier because it's a keyword • lib/core/services/tts_service.dart:4:27 • expected_identifier_but_got_keyword
+  error • Expected to find ';' • lib/core/services/tts_service.dart:4:27 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:4:27 • missing_const_final_var_or_type
+  error • Undefined class 'handling' • lib/core/services/tts_service.dart:4:31 • undefined_class
+  error • Expected to find ';' • lib/core/services/tts_service.dart:4:40 • expected_token
+  error • Functions must have an explicit list of parameters • lib/core/services/tts_service.dart:4:47 • missing_function_parameters
+  error • A function body must be provided • lib/core/services/tts_service.dart:4:55 • missing_function_body
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:4:55 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:5:1 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:5:3 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:5:5 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:5:7 • prefer_typing_uninitialized_variables
+   info • The variable name 'Update' isn't a lowerCamelCase identifier • lib/core/services/tts_service.dart:5:7 • non_constant_identifier_names
+  error • Expected to find ';' • lib/core/services/tts_service.dart:5:7 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:5:7 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:5:14 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:5:15 • prefer_typing_uninitialized_variables
+   info • The variable name 'ChatBloc' isn't a lowerCamelCase identifier • lib/core/services/tts_service.dart:5:15 • non_constant_identifier_names
+  error • Expected to find ';' • lib/core/services/tts_service.dart:5:15 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:5:15 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:5:23 • expected_executable
+  error • Undefined class 'to' • lib/core/services/tts_service.dart:5:25 • undefined_class
+  error • Expected to find ';' • lib/core/services/tts_service.dart:5:28 • expected_token
+  error • Undefined class 'streaming' • lib/core/services/tts_service.dart:5:36 • undefined_class
+  error • Expected to find ';' • lib/core/services/tts_service.dart:5:46 • expected_token
+  error • and isn't a type • lib/core/services/tts_service.dart:5:51 • not_a_type
+  error • Expected to find ';' • lib/core/services/tts_service.dart:5:55 • expected_token
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:5:61 • prefer_typing_uninitialized_variables
+  error • Expected to find ';' • lib/core/services/tts_service.dart:5:61 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:5:61 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:5:69 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:5:70 • prefer_typing_uninitialized_variables
+  error • Expected to find ';' • lib/core/services/tts_service.dart:5:70 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:5:70 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:5:72 • expected_executable
+  error • Functions must have an explicit list of parameters • lib/core/services/tts_service.dart:5:73 • missing_function_parameters
+  error • The name 'sentence' is already defined • lib/core/services/tts_service.dart:5:73 • duplicate_definition
+  error • A function body must be provided • lib/core/services/tts_service.dart:5:81 • missing_function_body
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:5:81 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:6:1 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:6:3 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:6:5 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:6:7 • prefer_typing_uninitialized_variables
+   info • The variable name 'Update' isn't a lowerCamelCase identifier • lib/core/services/tts_service.dart:6:7 • non_constant_identifier_names
+  error • Expected to find ';' • lib/core/services/tts_service.dart:6:7 • expected_token
+  error • The name 'Update' is already defined • lib/core/services/tts_service.dart:6:7 • duplicate_definition
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:6:7 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:6:14 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:6:15 • prefer_typing_uninitialized_variables
+   info • The variable name 'ChatState' isn't a lowerCamelCase identifier • lib/core/services/tts_service.dart:6:15 • non_constant_identifier_names
+  error • Expected to find ';' • lib/core/services/tts_service.dart:6:15 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:6:15 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:6:24 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:6:26 • prefer_typing_uninitialized_variables
+  error • Expected to find ';' • lib/core/services/tts_service.dart:6:26 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:6:26 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:6:30 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:6:31 • prefer_typing_uninitialized_variables
+   info • The variable name 'ChatEvent' isn't a lowerCamelCase identifier • lib/core/services/tts_service.dart:6:31 • non_constant_identifier_names
+  error • Expected to find ';' • lib/core/services/tts_service.dart:6:31 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:6:31 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:6:40 • expected_executable
+  error • Undefined class 'to' • lib/core/services/tts_service.dart:6:42 • undefined_class
+  error • Expected to find ';' • lib/core/services/tts_service.dart:6:45 • expected_token
+  error • Undefined class 'a' • lib/core/services/tts_service.dart:6:53 • undefined_class
+  error • Expected to find ';' • lib/core/services/tts_service.dart:6:55 • expected_token
+  error • Functions must have an explicit list of parameters • lib/core/services/tts_service.dart:6:60 • missing_function_parameters
+  error • A function body must be provided • lib/core/services/tts_service.dart:6:66 • missing_function_body
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:6:66 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:7:1 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:7:3 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:7:5 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:7:7 • prefer_typing_uninitialized_variables
+   info • The variable name 'Update' isn't a lowerCamelCase identifier • lib/core/services/tts_service.dart:7:7 • non_constant_identifier_names
+  error • Expected to find ';' • lib/core/services/tts_service.dart:7:7 • expected_token
+  error • The name 'Update' is already defined • lib/core/services/tts_service.dart:7:7 • duplicate_definition
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:7:7 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:7:14 • expected_executable
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:7:15 • prefer_typing_uninitialized_variables
+   info • The variable name 'ChatScreen' isn't a lowerCamelCase identifier • lib/core/services/tts_service.dart:7:15 • non_constant_identifier_names
+  error • Expected to find ';' • lib/core/services/tts_service.dart:7:15 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:7:15 • missing_const_final_var_or_type
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:7:25 • expected_executable
+  error • Undefined class 'to' • lib/core/services/tts_service.dart:7:27 • undefined_class
+  error • Expected to find ';' • lib/core/services/tts_service.dart:7:30 • expected_token
+  error • Undefined class 'a' • lib/core/services/tts_service.dart:7:38 • undefined_class
+  error • Expected to find ';' • lib/core/services/tts_service.dart:7:40 • expected_token
+  error • The name 'mute' is already defined • lib/core/services/tts_service.dart:7:40 • duplicate_definition
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:7:44 • expected_executable
+  error • Undefined class 'unmute' • lib/core/services/tts_service.dart:7:45 • undefined_class
+  error • Expected to find ';' • lib/core/services/tts_service.dart:7:52 • expected_token
+  error • The name 'toggle' is already defined • lib/core/services/tts_service.dart:7:52 • duplicate_definition
+   info • An uninitialized variable should have an explicit type annotation • lib/core/services/tts_service.dart:7:59 • prefer_typing_uninitialized_variables
+  error • 'in' can't be used as an identifier because it's a keyword • lib/core/services/tts_service.dart:7:59 • expected_identifier_but_got_keyword
+  error • Expected to find ';' • lib/core/services/tts_service.dart:7:59 • expected_token
+  error • Variables must be declared using the keywords 'const', 'final', 'var' or a type name • lib/core/services/tts_service.dart:7:59 • missing_const_final_var_or_type
+  error • the isn't a type • lib/core/services/tts_service.dart:7:62 • not_a_type
+  error • Expected to find ';' • lib/core/services/tts_service.dart:7:66 • expected_token
+  error • Functions must have an explicit list of parameters • lib/core/services/tts_service.dart:7:70 • missing_function_parameters
+  error • A function body must be provided • lib/core/services/tts_service.dart:7:73 • missing_function_body
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:7:73 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:8:1 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:8:3 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:8:5 • expected_executable
+  error • Undefined class 'Ensure' • lib/core/services/tts_service.dart:8:7 • undefined_class
+  error • Expected to find ';' • lib/core/services/tts_service.dart:8:14 • expected_token
+  error • The name 'speech' is already defined • lib/core/services/tts_service.dart:8:14 • duplicate_definition
+  error • Undefined class 'stops' • lib/core/services/tts_service.dart:8:21 • undefined_class
+  error • Expected to find ';' • lib/core/services/tts_service.dart:8:27 • expected_token
+  error • Undefined class 'navigating' • lib/core/services/tts_service.dart:8:32 • undefined_class
+  error • Expected to find ';' • lib/core/services/tts_service.dart:8:43 • expected_token
+  error • Undefined class 'from' • lib/core/services/tts_service.dart:8:48 • undefined_class
+  error • Expected to find ';' • lib/core/services/tts_service.dart:8:53 • expected_token
+  error • Undefined class 'chat' • lib/core/services/tts_service.dart:8:57 • undefined_class
+  error • Functions must have an explicit list of parameters • lib/core/services/tts_service.dart:8:62 • missing_function_parameters
+  error • A function body must be provided • lib/core/services/tts_service.dart:8:68 • missing_function_body
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:8:68 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:9:1 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:9:3 • expected_executable
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:9:5 • expected_executable
+  error • Undefined class 'Test' • lib/core/services/tts_service.dart:9:7 • undefined_class
+  error • Expected to find ';' • lib/core/services/tts_service.dart:9:12 • expected_token
+  error • The name 'and' is already defined • lib/core/services/tts_service.dart:9:12 • duplicate_definition
+  error • Undefined class 'create' • lib/core/services/tts_service.dart:9:16 • undefined_class
+   info • The variable name 'Walkthrough' isn't a lowerCamelCase identifier • lib/core/services/tts_service.dart:9:23 • non_constant_identifier_names
+  error • Functions must have an explicit list of parameters • lib/core/services/tts_service.dart:9:23 • missing_function_parameters
+  error • A function body must be provided • lib/core/services/tts_service.dart:9:34 • missing_function_body
+  error • Expected a method, getter, setter or operator declaration • lib/core/services/tts_service.dart:9:34 • expected_executable
+  error • The name 'ChatEvent' is defined in the libraries 'package:jansetu/core/services/tts_service.dart' and 'package:jansetu/features/chat/presentation/bloc/chat_event.dart' • lib/features/chat/presentation/bloc/chat_bloc.dart:11:29 • ambiguous_import
+  error • The name 'ChatState' is defined in the libraries 'package:jansetu/core/services/tts_service.dart' and 'package:jansetu/features/chat/presentation/bloc/chat_state.dart' • lib/features/chat/presentation/bloc/chat_bloc.dart:11:40 • ambiguous_import
+  error • TtsService isn't a type • lib/features/chat/presentation/bloc/chat_bloc.dart:14:9 • not_a_type
+  error • The name 'ChatState' is defined in the libraries 'package:jansetu/core/services/tts_service.dart' and 'package:jansetu/features/chat/presentation/bloc/chat_state.dart' • lib/features/chat/presentation/bloc/chat_bloc.dart:19:28 • ambiguous_import
+  error • The name 'ChatState' is defined in the libraries 'package:jansetu/core/services/tts_service.dart' and 'package:jansetu/features/chat/presentation/bloc/chat_state.dart' • lib/features/chat/presentation/bloc/chat_bloc.dart:40:13 • ambiguous_import
+  error • The name 'ChatState' is defined in the libraries 'package:jansetu/core/services/tts_service.dart' and 'package:jansetu/features/chat/presentation/bloc/chat_state.dart' • lib/features/chat/presentation/bloc/chat_bloc.dart:49:13 • ambiguous_import
+  error • The name 'ChatState' is defined in the libraries 'package:jansetu/core/services/tts_service.dart' and 'package:jansetu/features/chat/presentation/bloc/chat_state.dart' • lib/features/chat/presentation/bloc/chat_bloc.dart:86:13 • ambiguous_import
+  error • The name 'ChatState' is defined in the libraries 'package:jansetu/core/services/tts_service.dart' and 'package:jansetu/features/chat/presentation/bloc/chat_state.dart' • lib/features/chat/presentation/bloc/chat_bloc.dart:119:13 • ambiguous_import
+  error • The name 'ChatState' is defined in the libraries 'package:jansetu/core/services/tts_service.dart' and 'package:jansetu/features/chat/presentation/bloc/chat_state.dart' • lib/features/chat/presentation/bloc/chat_bloc.dart:135:13 • ambiguous_import
+  error • The name 'ChatState' is defined in the libraries 'package:jansetu/core/services/tts_service.dart' and 'package:jansetu/features/chat/presentation/bloc/chat_state.dart' • lib/features/chat/presentation/bloc/chat_bloc.dart:142:13 • ambiguous_import
+  error • 'ChatBloc' doesn't conform to the bound 'StateStreamable<ChatState>' of the type parameter 'B' • lib/features/chat/presentation/screens/chat_screen.dart:43:23 • type_argument_not_matching_bounds
+  error • 'ChatBloc' doesn't conform to the bound 'StateStreamable<ChatState>' of the type parameter 'B' • lib/features/chat/presentation/screens/chat_screen.dart:62:32 • type_argument_not_matching_bounds
+  error • 'ChatBloc' doesn't conform to the bound 'StateStreamable<ChatState>' of the type parameter 'B' • lib/features/chat/presentation/widgets/chat_input_bar.dart:34:24 • type_argument_not_matching_bounds
+
