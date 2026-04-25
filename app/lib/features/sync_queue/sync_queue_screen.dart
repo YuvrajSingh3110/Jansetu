@@ -19,6 +19,8 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
   int _pendingCount = 0;
   int _pendingSize = 0;
   bool _isLoading = true;
+  bool _isSyncing = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -27,16 +29,31 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    final reports = await _db.getAllReports();
-    final count = await _db.getPendingCount();
-    final size = await _db.getPendingSize();
-    setState(() {
-      _reports = reports;
-      _pendingCount = count;
-      _pendingSize = size;
-      _isLoading = false;
-    });
+    try {
+      setState(() => _isLoading = true);
+      final reports = await _db.getAllReports();
+      final count = await _db.getPendingCount();
+      final size = await _db.getPendingSize();
+      if (mounted) {
+        setState(() {
+          _reports = reports;
+          _pendingCount = count;
+          _pendingSize = size;
+          _isLoading = false;
+          _errorMessage = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.toString();
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading data: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -56,21 +73,63 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                _buildSummaryCard(),
-                Expanded(
-                  child: ListView.separated(
-                    itemCount: _reports.length,
-                    separatorBuilder: (context, index) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final report = _reports[index];
-                      return _buildReportItem(report);
-                    },
+          : _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.sync_problem, size: 48, color: Colors.orange),
+              const SizedBox(height: 16),
+              const Text(
+                'Unable to load sync queue',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.black54),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadData,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        _buildSummaryCard(),
+        Expanded(
+          child: _reports.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No queued reports yet.',
+                    style: TextStyle(color: Colors.black54),
                   ),
+                )
+              : ListView.separated(
+                  itemCount: _reports.length,
+                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final report = _reports[index];
+                    return _buildReportItem(report);
+                  },
                 ),
-              ],
-            ),
+        ),
+      ],
     );
   }
 
@@ -87,12 +146,10 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
             Text('Pending Reports: $_pendingCount'),
             Text('Total Payload: ${(_pendingSize / 1024).toStringAsFixed(2)} KB'),
             const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextButton(
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
                     onPressed: () async {
                       await SyncQueue.queueReport(
                         type: 'test_signal',
@@ -102,19 +159,33 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
                     },
                     child: const Text('Add Test'),
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () async {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Starting sync...')),
-                      );
-                      await SyncWorker.performSync();
-                      _loadData();
-                    },
-                    child: const Text('Try sync'),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(0, 48),
+                    ),
+                    onPressed: _isSyncing
+                        ? null
+                        : () async {
+                            final messenger = ScaffoldMessenger.of(context);
+                            messenger.showSnackBar(
+                              const SnackBar(content: Text('Starting sync...')),
+                            );
+                            setState(() => _isSyncing = true);
+                            final result = await SyncWorker.performSyncWithResult();
+                            if (!mounted) return;
+                            await _loadData();
+                            setState(() => _isSyncing = false);
+                            messenger.showSnackBar(
+                              SnackBar(content: Text(result.message)),
+                            );
+                          },
+                    child: Text(_isSyncing ? 'Syncing...' : 'Try sync'),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),
@@ -124,6 +195,8 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
 
   Widget _buildReportItem(Map<String, dynamic> report) {
     final status = report['status'];
+    final payload = report['payload']?.toString() ?? '';
+    final payloadPreview = payload.length > 140 ? '${payload.substring(0, 140)}...' : payload;
     Color statusColor;
     switch (status) {
       case 'SENT':
@@ -138,7 +211,11 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
 
     return ListTile(
       title: Text('${report['signal_type']} - $status'),
-      subtitle: Text('TS: ${report['timestamp']}\nSize: ${report['payload_size']} bytes'),
+      subtitle: Text(
+        'TS: ${report['timestamp']}\n'
+        'Size: ${report['payload_size'] ?? 0} bytes\n'
+        'Payload: $payloadPreview',
+      ),
       isThreeLine: true,
       trailing: Container(
         width: 12,

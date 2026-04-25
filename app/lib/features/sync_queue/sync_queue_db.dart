@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 class SyncQueueDatabase {
   static final SyncQueueDatabase instance = SyncQueueDatabase._init();
   static Database? _database;
+  static const _dbVersion = 2;
 
   SyncQueueDatabase._init();
 
@@ -19,22 +20,55 @@ class SyncQueueDatabase {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: _dbVersion,
       onCreate: _createDB,
+      onUpgrade: _onUpgrade,
+      onOpen: _onOpen,
     );
   }
 
   Future _createDB(Database db, int version) async {
+    await _createReportsTable(db);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _ensureReportsSchema(db);
+    }
+  }
+
+  Future<void> _onOpen(Database db) async {
+    await _ensureReportsSchema(db);
+  }
+
+  Future<void> _createReportsTable(Database db) async {
     await db.execute('''
-CREATE TABLE reports (
+CREATE TABLE IF NOT EXISTS reports (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   timestamp TEXT NOT NULL,
   signal_type TEXT NOT NULL,
   payload TEXT NOT NULL,
   status TEXT NOT NULL,
-  payload_size INTEGER NOT NULL
+  payload_size INTEGER NOT NULL DEFAULT 0
 )
 ''');
+  }
+
+  Future<void> _ensureReportsSchema(Database db) async {
+    await _createReportsTable(db);
+
+    final tableInfo = await db.rawQuery('PRAGMA table_info(reports)');
+    final columnNames = tableInfo
+        .map((column) => column['name'] as String?)
+        .whereType<String>()
+        .toSet();
+
+    if (!columnNames.contains('payload_size')) {
+      await db.execute(
+        'ALTER TABLE reports ADD COLUMN payload_size INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute('UPDATE reports SET payload_size = LENGTH(payload)');
+    }
   }
 
   Future<int> insertReport(Map<String, dynamic> row) async {
@@ -54,6 +88,7 @@ CREATE TABLE reports (
   }
 
   Future<int> updateStatus(List<int> ids, String status) async {
+    if (ids.isEmpty) return 0;
     final db = await instance.database;
     return await db.update(
       'reports',
