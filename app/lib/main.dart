@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:jansetu/app/app.dart';
+import 'package:jansetu/features/sync_queue/sync_auto_service.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:jansetu/features/sync_queue/sync_worker.dart';
 
@@ -19,6 +20,7 @@ void main() async {
   await Workmanager().initialize(
     callbackDispatcher,
   );
+  await SyncAutoService.instance.initialize();
 
   // Lock to portrait — this app targets low-spec Android phones in the field.
   SystemChrome.setPreferredOrientations([

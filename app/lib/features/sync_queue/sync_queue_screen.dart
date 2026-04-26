@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jansetu/features/asha/data/asha_repository.dart';
 import 'package:jansetu/features/sync_queue/sync_queue_db.dart';
 import 'package:jansetu/features/sync_queue/sync_queue_repository.dart';
 import 'package:jansetu/features/sync_queue/sync_worker.dart';
@@ -13,6 +14,7 @@ class SyncQueueScreen extends StatefulWidget {
 
 class _SyncQueueScreenState extends State<SyncQueueScreen> {
   final _repo = SyncQueueRepository();
+  final _ashaRepository = AshaRepository();
   final _db = SyncQueueDatabase.instance;
 
   List<Map<String, dynamic>> _reports = [];
@@ -151,9 +153,12 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
                 Expanded(
                   child: TextButton(
                     onPressed: () async {
+                      final payload = await _ashaRepository.buildReportPayload(
+                        transcript: 'Female adult with fever and cough for two days in Rampur',
+                      );
                       await SyncQueue.queueReport(
-                        type: 'test_signal',
-                        payload: {'test': 'data', 'val': 123},
+                        type: 'chw_report',
+                        payload: payload,
                       );
                       _loadData();
                     },

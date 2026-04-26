@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:jansetu/features/sync_queue/sync_queue_db.dart';
+import 'package:jansetu/features/sync_queue/sync_auto_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:workmanager/workmanager.dart';
@@ -25,6 +26,13 @@ class SyncQueueRepository {
   }
 
   Future<void> queueReport(HealthSignal signal) async {
+    await queueReportWithImage(signal);
+  }
+
+  Future<void> queueReportWithImage(
+    HealthSignal signal, {
+    String? localImagePath,
+  }) async {
     final timestamp = DateTime.now().toUtc().toIso8601String();
     final payloadStr = jsonEncode(signal.payload);
 
@@ -34,6 +42,7 @@ class SyncQueueRepository {
       'payload': payloadStr,
       'status': 'PENDING',
       'payload_size': utf8.encode(payloadStr).length,
+      'local_image_path': localImagePath,
     });
 
     // Schedule background task
@@ -44,6 +53,8 @@ class SyncQueueRepository {
         networkType: NetworkType.connected,
       ),
     );
+
+    await SyncAutoService.instance.notifyQueueUpdated();
   }
 
   Future<List<Map<String, dynamic>>> getReports() => _db.getAllReports();

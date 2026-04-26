@@ -1,33 +1,111 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:jansetu/core/services/speech_service.dart';
+import 'package:jansetu/features/asha/data/asha_repository.dart';
 import 'package:jansetu/features/asha/presentation/asha_navigation.dart';
 import 'package:jansetu/features/asha/presentation/widgets/asha_scaffold.dart';
+import 'package:jansetu/features/onboarding/presentation/bloc/onboarding_bloc.dart';
 import 'package:jansetu/sync_queue.dart';
 
-class AshaRecordingScreen extends StatelessWidget {
+class AshaRecordingScreen extends StatefulWidget {
   const AshaRecordingScreen({super.key});
 
-  Future<void> _saveReport(BuildContext context) async {
-    await SyncQueue.queueReport(
-      type: 'voice_triage',
-      payload: const {
-        'age_bucket': '35y',
-        'fever_days': 3,
-        'symptoms': ['cough', 'breathlessness'],
-        'location': 'Rampur',
+  @override
+  State<AshaRecordingScreen> createState() => _AshaRecordingScreenState();
+}
+
+class _AshaRecordingScreenState extends State<AshaRecordingScreen> {
+  final SpeechService _speechService = SpeechService();
+  final AshaRepository _repository = AshaRepository();
+
+  String _transcript = '';
+  bool _isListening = false;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startListening();
+    });
+  }
+
+  @override
+  void dispose() {
+    _speechService.stopListening();
+    super.dispose();
+  }
+
+  Future<void> _startListening() async {
+    final localeCode =
+        context.read<OnboardingBloc>().state.selectedLanguage?.localeCode ?? 'hi';
+    final localeId = switch (localeCode) {
+      'hi' => 'hi_IN',
+      'bn' => 'bn_IN',
+      'pa' => 'pa_IN',
+      _ => 'en_IN',
+    };
+
+    await _speechService.startListening(
+      localeId: localeId,
+      onResult: (text) {
+        if (!mounted) return;
+        setState(() {
+          _transcript = text;
+          _isListening = true;
+        });
       },
     );
-    if (!context.mounted) return;
+
+    if (!mounted) return;
+    setState(() {
+      _isListening = _speechService.isListening;
+    });
+  }
+
+  Future<void> _stopListening() async {
+    await _speechService.stopListening();
+    if (!mounted) return;
+    setState(() {
+      _isListening = false;
+    });
+  }
+
+  Future<void> _saveReport() async {
+    if (_transcript.trim().isEmpty || _isSaving) return;
+    setState(() => _isSaving = true);
+    await _stopListening();
+    final payload = await _repository.buildReportPayload(transcript: _transcript);
+    await SyncQueue.queueReport(type: 'chw_report', payload: payload);
+    if (!mounted) return;
+    setState(() => _isSaving = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Report saved to sync queue.')),
     );
     Navigator.of(context).pop();
   }
 
+  List<String> _deriveTags() {
+    final lower = _transcript.toLowerCase();
+    final tags = <String>[];
+    if (lower.contains('female') || lower.contains('mahila')) tags.add('F');
+    if (lower.contains('male')) tags.add('M');
+    if (lower.contains('fever') || lower.contains('bukhar')) tags.add('Fever');
+    if (lower.contains('cough') || lower.contains('khansi')) tags.add('Cough');
+    if (lower.contains('breath') || lower.contains('saans')) tags.add('Breathlessness');
+    if (lower.contains('rash') || lower.contains('daane')) tags.add('Rash');
+    if (tags.isEmpty) tags.add('Listening');
+    return tags.take(5).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final tags = _deriveTags();
+    final hasUrgentFlag = tags.contains('Breathlessness');
+
     return AshaScaffold(
       title: 'Recording...',
-      subtitle: 'Gemma 4 E4B - offline',
+      subtitle: _isListening ? 'Microphone active - live transcript' : 'Tap retake to start again',
       activeTab: AshaTab.home,
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
@@ -52,18 +130,16 @@ class AshaRecordingScreen extends StatelessWidget {
                 color: const Color(0xFFD7EEE7),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _WaveBar(height: 22),
-                  _WaveBar(height: 34),
-                  _WaveBar(height: 18),
-                  _WaveBar(height: 42),
-                  _WaveBar(height: 30),
-                  _WaveBar(height: 46),
-                  _WaveBar(height: 26),
-                  _WaveBar(height: 40),
-                ],
+                children: List.generate(
+                  8,
+                  (index) => _WaveBar(
+                    height: _isListening
+                        ? 18 + (index.isEven ? 12 : 26)
+                        : 12,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -79,9 +155,11 @@ class AshaRecordingScreen extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Text(
-                '"Female, around 35 years, fever for three days, cough and breathing difficulty..."',
-                style: TextStyle(
+              child: Text(
+                _transcript.isEmpty
+                    ? 'Listening for patient details...'
+                    : _transcript,
+                style: const TextStyle(
                   fontSize: 18,
                   height: 1.4,
                   color: Color(0xFF243142),
@@ -90,35 +168,47 @@ class AshaRecordingScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             const Text(
-              'Extracted (function call)',
+              'Extracted (local rules)',
               style: TextStyle(fontSize: 13, color: Color(0xFF6C7889)),
             ),
             const SizedBox(height: 8),
-            const Wrap(
+            Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: [
-                _TagChip(label: 'F - ~35 yrs', bg: Color(0xFFE3F2E9), fg: Color(0xFF276F46)),
-                _TagChip(label: 'Fever - 3 days', bg: Color(0xFFF8E9C6), fg: Color(0xFF8A5B00)),
-                _TagChip(label: 'Cough', bg: Color(0xFFF8E9C6), fg: Color(0xFF8A5B00)),
-                _TagChip(label: 'Breathlessness', bg: Color(0xFFFBE0E0), fg: Color(0xFFAF3F3F)),
-                _TagChip(label: 'Rampur', bg: Color(0xFFE3F2E9), fg: Color(0xFF276F46)),
-              ],
+              children: tags
+                  .map(
+                    (tag) => _TagChip(
+                      label: tag,
+                      bg: tag == 'Breathlessness'
+                          ? const Color(0xFFFBE0E0)
+                          : const Color(0xFFE3F2E9),
+                      fg: tag == 'Breathlessness'
+                          ? const Color(0xFFAF3F3F)
+                          : const Color(0xFF276F46),
+                    ),
+                  )
+                  .toList(),
             ),
             const SizedBox(height: 14),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFFBE7E7),
+                color: hasUrgentFlag
+                    ? const Color(0xFFFBE7E7)
+                    : const Color(0xFFF8F2DF),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Text(
-                'Breathlessness flag - recommend PHC referral today',
+              child: Text(
+                hasUrgentFlag
+                    ? 'Breathlessness flag - recommend PHC referral today'
+                    : 'No urgent symptom detected yet. Keep speaking or confirm to save.',
                 style: TextStyle(
                   fontSize: 18,
                   height: 1.4,
-                  color: Color(0xFFA63D3D),
+                  color: hasUrgentFlag
+                      ? const Color(0xFFA63D3D)
+                      : const Color(0xFF6E570C),
                 ),
               ),
             ),
@@ -127,7 +217,14 @@ class AshaRecordingScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () async {
+                      await _stopListening();
+                      if (!mounted) return;
+                      setState(() {
+                        _transcript = '';
+                      });
+                      await _startListening();
+                    },
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(0, 50),
                       foregroundColor: const Color(0xFF374355),
@@ -142,7 +239,7 @@ class AshaRecordingScreen extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => _saveReport(context),
+                    onPressed: _transcript.trim().isEmpty || _isSaving ? null : _saveReport,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(0, 50),
                       backgroundColor: const Color(0xFF0E7B60),
@@ -150,7 +247,7 @@ class AshaRecordingScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text('Confirm & save'),
+                    child: Text(_isSaving ? 'Saving...' : 'Confirm & save'),
                   ),
                 ),
               ],
@@ -198,7 +295,8 @@ class _WaveBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
       width: 4,
       height: height,
       margin: const EdgeInsets.symmetric(horizontal: 3),

@@ -1,19 +1,12 @@
 import 'dart:convert';
-import 'package:archive/archive_io.dart';
-import 'package:http/http.dart' as http;
+
+import 'package:jansetu/features/asha/data/asha_repository.dart';
 import 'package:jansetu/features/sync_queue/sync_queue_db.dart';
 import 'package:jansetu/features/sync_queue/sync_queue_repository.dart';
 
 enum _BatchDisposition { sent, failed, retry }
 
 class SyncResult {
-  final bool success;
-  final int pendingBefore;
-  final int sentCount;
-  final int failedCount;
-  final int retriedCount;
-  final String message;
-
   const SyncResult({
     required this.success,
     required this.pendingBefore,
@@ -23,25 +16,27 @@ class SyncResult {
     required this.message,
   });
 
-  bool get shouldRetry => retriedCount > 0 && sentCount == 0 && failedCount == 0;
+  final bool success;
+  final int pendingBefore;
+  final int sentCount;
+  final int failedCount;
+  final int retriedCount;
+  final String message;
 }
 
 class _BatchSyncResult {
-  final _BatchDisposition disposition;
-  final int affectedCount;
-  final String message;
-
   const _BatchSyncResult({
     required this.disposition,
     required this.affectedCount,
     required this.message,
   });
+
+  final _BatchDisposition disposition;
+  final int affectedCount;
+  final String message;
 }
 
 class SyncWorker {
-  static const _reportsPath = '/api/ingest/reports';
-  static const _syncBaseUrl = String.fromEnvironment('SYNC_BASE_URL', defaultValue: '');
-
   static Future<bool> performSync() async {
     final result = await performSyncWithResult();
     return result.success;
@@ -50,6 +45,7 @@ class SyncWorker {
   static Future<SyncResult> performSyncWithResult() async {
     final db = SyncQueueDatabase.instance;
     final repo = SyncQueueRepository();
+    final ashaRepository = AshaRepository();
     final deviceId = await repo.getDeviceId();
 
     final pending = await db.getPendingReports(100);
@@ -64,155 +60,143 @@ class SyncWorker {
       );
     }
 
-    final endpoint = _resolveEndpoint();
-    if (endpoint == null) {
-      return SyncResult(
-        success: false,
-        pendingBefore: pending.length,
-        sentCount: 0,
-        failedCount: 0,
-        retriedCount: pending.length,
-        message: 'Sync endpoint is not configured. Run with --dart-define=SYNC_BASE_URL=https://your-server',
-      );
-    }
-
-    List<Map<String, dynamic>> currentBatch = [];
-    int currentBatchSize = 0;
-    int sentCount = 0;
-    int failedCount = 0;
-    int retriedCount = 0;
+    var sentCount = 0;
+    var failedCount = 0;
+    var retriedCount = 0;
+    var currentBatchSize = 0;
+    var currentBatch = <Map<String, dynamic>>[];
+    var currentPayloads = <Map<String, dynamic>>[];
 
     for (final report in pending) {
+      final payload = _normalizePayload(report);
+      if (payload == null) {
+        await db.updateStatus([report['id'] as int], 'FAILED');
+        failedCount += 1;
+        continue;
+      }
+
       final reportSize = report['payload_size'] as int? ?? 0;
       if (currentBatchSize + reportSize > 2048 && currentBatch.isNotEmpty) {
-        final batchResult = await _uploadBatch(currentBatch, deviceId, endpoint);
+        final batchResult = await _uploadBatch(
+          reports: currentBatch,
+          payloads: currentPayloads,
+          deviceId: deviceId,
+          repository: ashaRepository,
+        );
         switch (batchResult.disposition) {
           case _BatchDisposition.sent:
             sentCount += batchResult.affectedCount;
+            break;
           case _BatchDisposition.failed:
             failedCount += batchResult.affectedCount;
+            break;
           case _BatchDisposition.retry:
             retriedCount += batchResult.affectedCount;
+            break;
         }
-        currentBatch = [];
+        currentBatch = <Map<String, dynamic>>[];
+        currentPayloads = <Map<String, dynamic>>[];
         currentBatchSize = 0;
       }
+
       currentBatch.add(report);
+      currentPayloads.add(payload);
       currentBatchSize += reportSize;
     }
 
     if (currentBatch.isNotEmpty) {
-      final batchResult = await _uploadBatch(currentBatch, deviceId, endpoint);
+      final batchResult = await _uploadBatch(
+        reports: currentBatch,
+        payloads: currentPayloads,
+        deviceId: deviceId,
+        repository: ashaRepository,
+      );
       switch (batchResult.disposition) {
         case _BatchDisposition.sent:
           sentCount += batchResult.affectedCount;
+          break;
         case _BatchDisposition.failed:
           failedCount += batchResult.affectedCount;
+          break;
         case _BatchDisposition.retry:
           retriedCount += batchResult.affectedCount;
+          break;
       }
     }
 
-    final success = retriedCount == 0;
     final summaryParts = <String>[];
     if (sentCount > 0) summaryParts.add('sent $sentCount');
     if (failedCount > 0) summaryParts.add('failed $failedCount');
     if (retriedCount > 0) summaryParts.add('pending retry $retriedCount');
 
     return SyncResult(
-      success: success,
+      success: retriedCount == 0,
       pendingBefore: pending.length,
       sentCount: sentCount,
       failedCount: failedCount,
       retriedCount: retriedCount,
-      message: summaryParts.isEmpty ? 'Sync finished with no changes.' : 'Sync finished: ${summaryParts.join(', ')}.',
+      message: summaryParts.isEmpty
+          ? 'Sync finished with no changes.'
+          : 'Sync finished: ${summaryParts.join(', ')}.',
     );
   }
 
-  static Uri? _resolveEndpoint() {
-    final raw = _syncBaseUrl.trim();
-    if (raw.isEmpty) return null;
-    final base = Uri.tryParse(raw);
-    if (base == null || !(base.hasScheme && base.host.isNotEmpty)) {
-      return null;
-    }
-    return base.resolve(_reportsPath);
-  }
-
-  static Future<_BatchSyncResult> _uploadBatch(
-    List<Map<String, dynamic>> reports,
-    String deviceId,
-    Uri endpoint,
-  ) async {
+  static Future<_BatchSyncResult> _uploadBatch({
+    required List<Map<String, dynamic>> reports,
+    required List<Map<String, dynamic>> payloads,
+    required String deviceId,
+    required AshaRepository repository,
+  }) async {
     final db = SyncQueueDatabase.instance;
-    final ids = reports.map((e) => e['id'] as int).toList();
-
-    final bodyMap = {
-      'reports': reports.map((r) {
-        dynamic payload;
-        try {
-          payload = jsonDecode(r['payload']);
-        } catch (e) {
-          payload = r['payload'];
-        }
-        return {
-          'timestamp': r['timestamp'],
-          'signal_type': r['signal_type'],
-          'payload': payload,
-        };
-      }).toList(),
-    };
-
-    final bodyBytes = utf8.encode(jsonEncode(bodyMap));
-    final useGzip = bodyBytes.length > 1024;
+    final ids = reports.map((item) => item['id'] as int).toList();
 
     try {
-      final headers = {
-        'Content-Type': 'application/json',
-        'X-Device-ID': deviceId,
-      };
-
-      List<int> finalBody;
-      if (useGzip) {
-        headers['Content-Encoding'] = 'gzip';
-        finalBody = GZipEncoder().encode(bodyBytes)!;
-      } else {
-        finalBody = bodyBytes;
-      }
-
-      final response = await http.post(
-        endpoint,
-        headers: headers,
-        body: finalBody,
-      ).timeout(const Duration(seconds: 20));
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        await db.updateStatus(ids, 'SENT');
-        return _BatchSyncResult(
-          disposition: _BatchDisposition.sent,
-          affectedCount: ids.length,
-          message: 'Batch sent successfully.',
-        );
-      } else if (response.statusCode == 400) {
+      final response = await repository.syncReports(
+        reports: payloads,
+        deviceId: deviceId,
+      );
+      await db.updateStatus(ids, 'SENT');
+      return _BatchSyncResult(
+        disposition: _BatchDisposition.sent,
+        affectedCount: ids.length,
+        message: 'Batch sent successfully (${response.received} stored).',
+      );
+    } on AshaSyncException catch (error) {
+      if (!error.retryable) {
         await db.updateStatus(ids, 'FAILED');
         return _BatchSyncResult(
           disposition: _BatchDisposition.failed,
           affectedCount: ids.length,
-          message: 'Batch rejected with 400 Bad Request.',
-        );
-      } else {
-        return _BatchSyncResult(
-          disposition: _BatchDisposition.retry,
-          affectedCount: ids.length,
-          message: 'Server responded with ${response.statusCode}.',
+          message: error.message,
         );
       }
-    } catch (e) {
       return _BatchSyncResult(
         disposition: _BatchDisposition.retry,
         affectedCount: ids.length,
-        message: 'Network error: $e',
+        message: error.message,
       );
+    } catch (error) {
+      return _BatchSyncResult(
+        disposition: _BatchDisposition.retry,
+        affectedCount: ids.length,
+        message: 'Network error: $error',
+      );
+    }
+  }
+
+  static Map<String, dynamic>? _normalizePayload(Map<String, dynamic> report) {
+    try {
+      final rawPayload = report['payload']?.toString();
+      if (rawPayload == null || rawPayload.isEmpty) return null;
+      final decoded = jsonDecode(rawPayload);
+      if (decoded is! Map<String, dynamic>) return null;
+      if (report['signal_type']?.toString() != 'chw_report') return null;
+
+      final payload = Map<String, dynamic>.from(decoded);
+      payload.remove('transcript');
+      return payload;
+    } catch (_) {
+      return null;
     }
   }
 }

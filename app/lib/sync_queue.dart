@@ -9,8 +9,12 @@ class SyncQueue {
   static Future<void> queueReport({
     required String type,
     required Map<String, dynamic> payload,
+    String? localImagePath,
   }) async {
-    await _repo.queueReport(HealthSignal(type: type, payload: payload));
+    await _repo.queueReportWithImage(
+      HealthSignal(type: type, payload: payload),
+      localImagePath: localImagePath,
+    );
   }
 
   /// Opens the Sync Queue management screen.

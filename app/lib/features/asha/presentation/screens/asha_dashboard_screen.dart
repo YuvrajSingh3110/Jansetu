@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:jansetu/core/services/location_service.dart';
+import 'package:jansetu/features/asha/data/asha_models.dart';
+import 'package:jansetu/features/asha/data/asha_repository.dart';
 import 'package:jansetu/features/asha/presentation/asha_navigation.dart';
 import 'package:jansetu/features/asha/presentation/screens/asha_photo_assessment_screen.dart';
 import 'package:jansetu/features/asha/presentation/screens/asha_recording_screen.dart';
@@ -13,100 +14,210 @@ class AshaDashboardScreen extends StatefulWidget {
 }
 
 class _AshaDashboardScreenState extends State<AshaDashboardScreen> {
-  String _villageName = 'Rampur block';
+  final AshaRepository _repository = AshaRepository();
+  DashboardData? _dashboardData;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _fetchLocation();
+    _loadDashboard();
   }
 
-  Future<void> _fetchLocation() async {
-    final location = await LocationService().getCurrentLocality(
-      fallback: 'Rampur block',
-    );
-    if (!mounted) return;
-    setState(() {
-      _villageName = location;
-    });
+  Future<void> _loadDashboard() async {
+    try {
+      final dashboard = await _repository.loadDashboardData();
+      if (!mounted) return;
+      setState(() {
+        _dashboardData = dashboard;
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = error.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null || _dashboardData == null) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(_errorMessage ?? 'Unable to load ASHA dashboard'),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: _loadDashboard,
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final data = _dashboardData!;
+    final latestAlert = data.alerts.isEmpty ? null : data.alerts.first;
+
     return AshaScaffold(
       title: 'ASHA Dashboard',
-      subtitle: 'Seema Devi - $_villageName',
+      subtitle: '${data.profile.name} - ${data.profile.block.name}',
       activeTab: AshaTab.home,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-        child: Column(
-          children: [
-            const Row(
-              children: [
-                Expanded(
-                  child: _StatCard(
-                    value: '12',
-                    label: 'Today',
-                    tint: Color(0xFFE2F2EE),
-                    valueColor: Color(0xFF0E7B60),
+      body: RefreshIndicator(
+        onRefresh: _loadDashboard,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _StatCard(
+                      value: '${data.profile.reportsCount}',
+                      label: 'Reports',
+                      tint: const Color(0xFFE2F2EE),
+                      valueColor: const Color(0xFF0E7B60),
+                    ),
                   ),
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: _StatCard(
-                    value: '3',
-                    label: 'Pending\nsync',
-                    tint: Color(0xFFF8EEDB),
-                    valueColor: Color(0xFF946200),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _StatCard(
+                      value: '${data.pendingSyncCount}',
+                      label: 'Pending\nsync',
+                      tint: const Color(0xFFF8EEDB),
+                      valueColor: const Color(0xFF946200),
+                    ),
                   ),
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: _StatCard(
-                    value: '1',
-                    label: 'Alert',
-                    tint: Color(0xFFF8E6E6),
-                    valueColor: Color(0xFFC24747),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _StatCard(
+                      value: '${data.alerts.length}',
+                      label: 'Alerts',
+                      tint: const Color(0xFFF8E6E6),
+                      valueColor: const Color(0xFFC24747),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            _PrimaryReportCard(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AshaRecordingScreen()),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _ActionCard(
-                    icon: Icons.photo_camera_outlined,
-                    label: 'Photo assess',
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const AshaPhotoAssessmentScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ActionCard(
-                    icon: Icons.sync_rounded,
-                    label: 'Sync queue',
-                    onTap: () => openAshaTab(context, AshaTab.sync),
-                  ),
+                ],
+              ),
+              if (data.clockDriftWarning != null) ...[
+                const SizedBox(height: 12),
+                _InfoBanner(
+                  message: data.clockDriftWarning!,
+                  background: const Color(0xFFF8EEDB),
+                  foreground: const Color(0xFF946200),
                 ),
               ],
+              if (latestAlert != null) ...[
+                const SizedBox(height: 12),
+                _InfoBanner(
+                  message: latestAlert.title,
+                  subtitle: '${latestAlert.caseCount} cases across ${latestAlert.affectedVillages.join(', ')}',
+                  background: const Color(0xFFFBE7E7),
+                  foreground: const Color(0xFFB14040),
+                ),
+              ],
+              const SizedBox(height: 14),
+              _PrimaryReportCard(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AshaRecordingScreen()),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ActionCard(
+                      icon: Icons.photo_camera_outlined,
+                      label: 'Photo assess',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const AshaPhotoAssessmentScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _ActionCard(
+                      icon: Icons.sync_rounded,
+                      label: 'Sync queue',
+                      onTap: () => openAshaTab(context, AshaTab.sync),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoBanner extends StatelessWidget {
+  const _InfoBanner({
+    required this.message,
+    required this.background,
+    required this.foreground,
+    this.subtitle,
+  });
+
+  final String message;
+  final String? subtitle;
+  final Color background;
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            message,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: foreground,
+            ),
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              subtitle!,
+              style: TextStyle(
+                fontSize: 14,
+                color: foreground,
+              ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }

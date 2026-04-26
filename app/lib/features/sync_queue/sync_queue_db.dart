@@ -4,7 +4,7 @@ import 'package:path/path.dart';
 class SyncQueueDatabase {
   static final SyncQueueDatabase instance = SyncQueueDatabase._init();
   static Database? _database;
-  static const _dbVersion = 2;
+  static const _dbVersion = 3;
 
   SyncQueueDatabase._init();
 
@@ -35,6 +35,9 @@ class SyncQueueDatabase {
     if (oldVersion < 2) {
       await _ensureReportsSchema(db);
     }
+    if (oldVersion < 3) {
+      await _ensureReportsSchema(db);
+    }
   }
 
   Future<void> _onOpen(Database db) async {
@@ -49,7 +52,8 @@ CREATE TABLE IF NOT EXISTS reports (
   signal_type TEXT NOT NULL,
   payload TEXT NOT NULL,
   status TEXT NOT NULL,
-  payload_size INTEGER NOT NULL DEFAULT 0
+  payload_size INTEGER NOT NULL DEFAULT 0,
+  local_image_path TEXT
 )
 ''');
   }
@@ -68,6 +72,10 @@ CREATE TABLE IF NOT EXISTS reports (
         'ALTER TABLE reports ADD COLUMN payload_size INTEGER NOT NULL DEFAULT 0',
       );
       await db.execute('UPDATE reports SET payload_size = LENGTH(payload)');
+    }
+
+    if (!columnNames.contains('local_image_path')) {
+      await db.execute('ALTER TABLE reports ADD COLUMN local_image_path TEXT');
     }
   }
 
@@ -100,6 +108,20 @@ CREATE TABLE IF NOT EXISTS reports (
   Future<List<Map<String, dynamic>>> getAllReports() async {
     final db = await instance.database;
     return await db.query('reports', orderBy: 'id DESC');
+  }
+
+  Future<List<Map<String, dynamic>>> getReportsByStatuses(List<String> statuses) async {
+    final db = await instance.database;
+    if (statuses.isEmpty) {
+      return db.query('reports', orderBy: 'id DESC');
+    }
+    final placeholders = List.filled(statuses.length, '?').join(',');
+    return db.query(
+      'reports',
+      where: 'status IN ($placeholders)',
+      whereArgs: statuses,
+      orderBy: 'id DESC',
+    );
   }
 
   Future<int> getPendingCount() async {
