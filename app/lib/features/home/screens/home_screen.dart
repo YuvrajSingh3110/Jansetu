@@ -5,6 +5,7 @@ import 'package:jansetu/core/theme/app_theme.dart';
 import 'package:jansetu/core/services/location_service.dart';
 import 'package:jansetu/core/services/speech_service.dart';
 import 'package:jansetu/features/chat/presentation/screens/chat_screen.dart';
+import 'package:jansetu/features/photo/presentation/screens/photo_assessment_screen.dart';
 import 'package:jansetu/features/onboarding/presentation/bloc/onboarding_bloc.dart';
 import 'package:jansetu/sync_queue.dart';
 
@@ -58,7 +59,28 @@ class _HomeScreenState extends State<HomeScreen> {
                           iconColor: Colors.black87,
                           title: 'photoCheckTitle'.tr(),
                           subtitle: 'photoCheckSubtitle'.tr(),
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => PhotoAssessmentScreen(
+                                  title: 'Photo assessment',
+                                  subtitle: 'Shared village photo pipeline',
+                                  saveButtonLabel: 'Save assessment',
+                                  onSave: (imagePath, result) async {
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Assessment saved: ${result.primaryFinding}',
+                                        ),
+                                      ),
+                                    );
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ),
+                            );
+                          },
                         )),
                         const SizedBox(width: 16),
                         Expanded(child: _buildActionCard(

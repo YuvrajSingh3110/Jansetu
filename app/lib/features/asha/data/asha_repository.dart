@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:jansetu/features/asha/data/asha_cache_db.dart';
 import 'package:jansetu/features/asha/data/asha_models.dart';
+import 'package:jansetu/features/asha/data/asha_worker_profile_repository.dart';
 import 'package:jansetu/features/sync_queue/sync_queue_db.dart';
 
 class AshaRepository {
@@ -28,6 +29,8 @@ class AshaRepository {
   final http.Client _client;
   final AshaCacheDatabase _cache = AshaCacheDatabase.instance;
   final SyncQueueDatabase _queueDb = SyncQueueDatabase.instance;
+  final AshaWorkerProfileRepository _workerProfileRepository =
+      AshaWorkerProfileRepository();
 
   Map<String, String> get _authHeaders => {
         'Authorization': 'Bearer $_authToken',
@@ -57,9 +60,15 @@ class AshaRepository {
     return bootstrap;
   }
 
-  Future<ChwProfile> fetchProfile({String employeeId = _defaultEmployeeId}) async {
+  Future<ChwProfile> fetchProfile({String? employeeId}) async {
+    final workerProfile = await _workerProfileRepository.loadProfile();
+    final workerEmployeeId = workerProfile?.employeeId.trim();
+    final resolvedEmployeeId = employeeId ??
+        ((workerEmployeeId != null && workerEmployeeId.isNotEmpty)
+            ? workerEmployeeId
+            : _defaultEmployeeId);
     final response = await _client.get(
-      Uri.parse('$_baseUrl/api/android/chw/profile?employeeId=$employeeId'),
+      Uri.parse('$_baseUrl/api/android/chw/profile?employeeId=$resolvedEmployeeId'),
       headers: _authHeaders,
     );
     if (response.statusCode != 200) {

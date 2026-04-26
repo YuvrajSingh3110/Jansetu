@@ -1,9 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:jansetu/features/asha/data/asha_repository.dart';
 import 'package:jansetu/features/sync_queue/sync_queue_db.dart';
-import 'package:jansetu/features/sync_queue/sync_queue_repository.dart';
-import 'package:jansetu/features/sync_queue/sync_worker.dart';
-import 'package:jansetu/sync_queue.dart';
 
 class SyncQueueScreen extends StatefulWidget {
   const SyncQueueScreen({super.key});
@@ -13,16 +11,12 @@ class SyncQueueScreen extends StatefulWidget {
 }
 
 class _SyncQueueScreenState extends State<SyncQueueScreen> {
-  final _repo = SyncQueueRepository();
-  final _ashaRepository = AshaRepository();
-  final _db = SyncQueueDatabase.instance;
+  final SyncQueueDatabase _db = SyncQueueDatabase.instance;
 
-  List<Map<String, dynamic>> _reports = [];
+  List<_QueueListItem> _items = const [];
   int _pendingCount = 0;
   int _pendingSize = 0;
   bool _isLoading = true;
-  bool _isSyncing = false;
-  String? _errorMessage;
 
   @override
   void initState() {
@@ -31,205 +25,286 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
   }
 
   Future<void> _loadData() async {
-    try {
-      setState(() => _isLoading = true);
-      final reports = await _db.getAllReports();
-      final count = await _db.getPendingCount();
-      final size = await _db.getPendingSize();
-      if (mounted) {
-        setState(() {
-          _reports = reports;
-          _pendingCount = count;
-          _pendingSize = size;
-          _isLoading = false;
-          _errorMessage = null;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = e.toString();
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading data: $e')),
-        );
-      }
-    }
+    setState(() => _isLoading = true);
+    final reports = await _db.getAllReports();
+    final pendingCount = await _db.getPendingCount();
+    final pendingSize = await _db.getPendingSize();
+    if (!mounted) return;
+    setState(() {
+      _items = reports.map(_QueueListItem.fromRow).toList();
+      _pendingCount = pendingCount;
+      _pendingSize = pendingSize;
+      _isLoading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sync Queue'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () async {
-              await _repo.clearSent();
-              _loadData();
-            },
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _buildBody(),
-    );
-  }
-
-  Widget _buildBody() {
-    if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.sync_problem, size: 48, color: Colors.orange),
-              const SizedBox(height: 16),
-              const Text(
-                'Unable to load sync queue',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.black54),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _loadData,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Column(
-      children: [
-        _buildSummaryCard(),
-        Expanded(
-          child: _reports.isEmpty
-              ? const Center(
-                  child: Text(
-                    'No queued reports yet.',
-                    style: TextStyle(color: Colors.black54),
-                  ),
-                )
-              : ListView.separated(
-                  itemCount: _reports.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final report = _reports[index];
-                    return _buildReportItem(report);
-                  },
-                ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSummaryCard() {
-    return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      backgroundColor: const Color(0xFFF5F6FA),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Queue Summary', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text('Pending Reports: $_pendingCount'),
-            Text('Total Payload: ${(_pendingSize / 1024).toStringAsFixed(2)} KB'),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () async {
-                      final payload = await _ashaRepository.buildReportPayload(
-                        transcript: 'Female adult with fever and cough for two days in Rampur',
-                      );
-                      await SyncQueue.queueReport(
-                        type: 'chw_report',
-                        payload: payload,
-                      );
-                      _loadData();
-                    },
-                    child: const Text('Add Test'),
-                  ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+              decoration: const BoxDecoration(
+                color: Color(0xFF2368AF),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(0, 48),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Sync queue',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
                     ),
-                    onPressed: _isSyncing
-                        ? null
-                        : () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            messenger.showSnackBar(
-                              const SnackBar(content: Text('Starting sync...')),
-                            );
-                            setState(() => _isSyncing = true);
-                            final result = await SyncWorker.performSyncWithResult();
-                            if (!mounted) return;
-                            await _loadData();
-                            setState(() => _isSyncing = false);
-                            messenger.showSnackBar(
-                              SnackBar(content: Text(result.message)),
-                            );
-                          },
-                    child: Text(_isSyncing ? 'Syncing...' : 'Try sync'),
                   ),
-                ),
-              ],
+                  SizedBox(height: 4),
+                  Text(
+                    'Auto-syncs on 2G burst',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : RefreshIndicator(
+                      onRefresh: _loadData,
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8EFD8),
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: Text(
+                              '$_pendingCount reports queued\nWaiting for signal. Will send in <2KB packets automatically. No action needed.',
+                              style: const TextStyle(
+                                height: 1.55,
+                                fontSize: 18,
+                                color: Color(0xFF7A5B00),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          if (_items.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 30),
+                              child: Center(
+                                child: Text(
+                                  'No queued reports yet.',
+                                  style: TextStyle(color: Color(0xFF6C7889)),
+                                ),
+                              ),
+                            )
+                          else
+                            ..._items.map(
+                              (item) => Column(
+                                children: [
+                                  _QueueCell(item: item),
+                                  const Divider(height: 1, color: Color(0xFFE7EAF0)),
+                                ],
+                              ),
+                            ),
+                          const SizedBox(height: 14),
+                          Row(
+                            children: [
+                              const _LegendDot(color: Color(0xFFF2A324)),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Pending',
+                                style: _legendStyle(),
+                              ),
+                              const SizedBox(width: 18),
+                              const _LegendDot(color: Color(0xFF18A26E)),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Sent',
+                                style: _legendStyle(),
+                              ),
+                              const Spacer(),
+                              Text(
+                                'Total: ${(_pendingSize / 1024).toStringAsFixed(1)} KB',
+                                style: _legendStyle(),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildReportItem(Map<String, dynamic> report) {
-    final status = report['status'];
-    final payload = report['payload']?.toString() ?? '';
-    final payloadPreview = payload.length > 140 ? '${payload.substring(0, 140)}...' : payload;
-    Color statusColor;
-    switch (status) {
-      case 'SENT':
-        statusColor = Colors.green;
-        break;
-      case 'FAILED':
-        statusColor = Colors.red;
-        break;
-      default:
-        statusColor = Colors.grey;
-    }
+class _QueueCell extends StatelessWidget {
+  const _QueueCell({required this.item});
 
-    return ListTile(
-      title: Text('${report['signal_type']} - $status'),
-      subtitle: Text(
-        'TS: ${report['timestamp']}\n'
-        'Size: ${report['payload_size'] ?? 0} bytes\n'
-        'Payload: $payloadPreview',
-      ),
-      isThreeLine: true,
-      trailing: Container(
-        width: 12,
-        height: 12,
-        decoration: BoxDecoration(
-          color: statusColor,
-          shape: BoxShape.circle,
-        ),
+  final _QueueListItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final statusColor =
+        item.isSent ? const Color(0xFF18A26E) : const Color(0xFFF2A324);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: _LegendDot(color: statusColor),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    height: 1.3,
+                    color: Color(0xFF182434),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.subtitle,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF7D8796),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            '${(item.payloadSize / 1024).toStringAsFixed(1)} KB',
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF8A94A5),
+            ),
+          ),
+        ],
       ),
     );
   }
+}
+
+class _QueueListItem {
+  const _QueueListItem({
+    required this.title,
+    required this.subtitle,
+    required this.payloadSize,
+    required this.isSent,
+  });
+
+  final String title;
+  final String subtitle;
+  final int payloadSize;
+  final bool isSent;
+
+  factory _QueueListItem.fromRow(Map<String, dynamic> row) {
+    Map<String, dynamic> payload = const {};
+    try {
+      payload = jsonDecode(row['payload']?.toString() ?? '{}')
+          as Map<String, dynamic>;
+    } catch (_) {}
+
+    final gender = payload['gender']?.toString() ?? 'U';
+    final ageGroup = payload['ageGroup']?.toString() ?? 'adult';
+    final ageLabel = switch (ageGroup) {
+      'child' => 'Child',
+      'elderly' => '60+',
+      _ => 'Adult',
+    };
+    final symptoms = ((payload['symptoms'] as List?) ?? const [])
+        .map((item) => item.toString())
+        .toList();
+    final symptomLabel = symptoms.isEmpty
+        ? 'General check'
+        : symptoms.map(_prettySymptom).join(', ');
+    final village = payload['villageId']?.toString().replaceFirst('clv', '') ?? 'Rampur';
+    final status = row['status']?.toString() ?? 'PENDING';
+    final timestamp = DateTime.tryParse(row['timestamp']?.toString() ?? '');
+    final timeLabel = timestamp == null
+        ? 'Unknown'
+        : _formatTimestamp(timestamp.toLocal());
+
+    return _QueueListItem(
+      title: '$gender/$ageLabel · $symptomLabel',
+      subtitle: status == 'SENT'
+          ? '$timeLabel · Sent ✓'
+          : '$timeLabel · ${_titleCaseVillage(village)}',
+      payloadSize: (row['payload_size'] as num?)?.toInt() ?? 0,
+      isSent: status == 'SENT',
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  const _LegendDot({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 12,
+      height: 12,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+      ),
+    );
+  }
+}
+
+TextStyle _legendStyle() {
+  return const TextStyle(
+    fontSize: 14,
+    color: Color(0xFF7D8796),
+  );
+}
+
+String _prettySymptom(String raw) {
+  final withSpaces = raw.replaceAll('_', ' ');
+  return withSpaces.isEmpty
+      ? withSpaces
+      : '${withSpaces[0].toUpperCase()}${withSpaces.substring(1)}';
+}
+
+String _titleCaseVillage(String value) {
+  if (value.isEmpty) return value;
+  return '${value[0].toUpperCase()}${value.substring(1)}';
+}
+
+String _formatTimestamp(DateTime time) {
+  final now = DateTime.now();
+  final isToday = now.year == time.year &&
+      now.month == time.month &&
+      now.day == time.day;
+  final hour = time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
+  final minute = time.minute.toString().padLeft(2, '0');
+  return isToday ? 'Today $hour:$minute' : 'Yesterday';
 }
