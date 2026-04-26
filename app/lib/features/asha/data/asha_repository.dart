@@ -71,6 +71,23 @@ class AshaRepository {
       Uri.parse('$_baseUrl/api/android/chw/profile?employeeId=$resolvedEmployeeId'),
       headers: _authHeaders,
     );
+    if (response.statusCode == 404) {
+      // Return a skeleton profile if not found on server, using local setup if available
+      return ChwProfile(
+        id: '-1',
+        employeeId: resolvedEmployeeId,
+        name: workerProfile?.fullName ?? 'CHW User',
+        phone: workerProfile?.phoneNumber ?? '',
+        isActive: true,
+        reportsCount: 0,
+        lastSyncAt: null,
+        block: const ChwBlock(
+          id: 'clb001rampur',
+          name: 'Rampur',
+          villages: [],
+        ),
+      );
+    }
     if (response.statusCode != 200) {
       throw Exception('CHW profile failed with ${response.statusCode}');
     }

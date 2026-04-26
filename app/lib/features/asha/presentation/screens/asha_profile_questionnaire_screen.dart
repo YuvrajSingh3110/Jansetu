@@ -40,10 +40,31 @@ class _AshaProfileQuestionnaireScreenState
         TextEditingController(text: initial?.supervisorName ?? '');
     _villageController = TextEditingController(text: initial?.primaryVillage ?? '');
     _designation = initial?.designation;
+
+    for (final controller in [
+      _nameController,
+      _employeeController,
+      _phoneController,
+      _officeController,
+      _supervisorController,
+      _villageController,
+    ]) {
+      controller.addListener(_handleFieldChanged);
+    }
   }
 
   @override
   void dispose() {
+    for (final controller in [
+      _nameController,
+      _employeeController,
+      _phoneController,
+      _officeController,
+      _supervisorController,
+      _villageController,
+    ]) {
+      controller.removeListener(_handleFieldChanged);
+    }
     _controller.dispose();
     _nameController.dispose();
     _employeeController.dispose();
@@ -52,6 +73,16 @@ class _AshaProfileQuestionnaireScreenState
     _supervisorController.dispose();
     _villageController.dispose();
     super.dispose();
+  }
+
+  void _handleFieldChanged() {
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  void _handleImmediateInput(String _) {
+    if (!mounted) return;
+    setState(() {});
   }
 
   bool _isCurrentStepValid() {
@@ -126,6 +157,7 @@ class _AshaProfileQuestionnaireScreenState
         child: _StyledTextField(
           controller: _nameController,
           hintText: 'Seema Devi',
+          onChanged: _handleImmediateInput,
         ),
       ),
       _QuestionStep(
@@ -135,6 +167,7 @@ class _AshaProfileQuestionnaireScreenState
           controller: _employeeController,
           hintText: 'VR-2841',
           textCapitalization: TextCapitalization.characters,
+          onChanged: _handleImmediateInput,
         ),
       ),
       _QuestionStep(
@@ -144,6 +177,7 @@ class _AshaProfileQuestionnaireScreenState
           controller: _phoneController,
           hintText: '+91 90000 12345',
           keyboardType: TextInputType.phone,
+          onChanged: _handleImmediateInput,
         ),
       ),
       _QuestionStep(
@@ -169,6 +203,7 @@ class _AshaProfileQuestionnaireScreenState
         child: _StyledTextField(
           controller: _officeController,
           hintText: 'Rampur Block PHC',
+          onChanged: _handleImmediateInput,
         ),
       ),
       _QuestionStep(
@@ -179,16 +214,19 @@ class _AshaProfileQuestionnaireScreenState
             _StyledTextField(
               controller: _supervisorController,
               hintText: 'Supervisor name',
+              onChanged: _handleImmediateInput,
             ),
             const SizedBox(height: 14),
             _StyledTextField(
               controller: _villageController,
               hintText: 'Primary village',
+              onChanged: _handleImmediateInput,
             ),
           ],
         ),
       ),
     ];
+    final canProceed = _isCurrentStepValid() && !_isSaving;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FB),
@@ -224,6 +262,10 @@ class _AshaProfileQuestionnaireScreenState
                 controller: _controller,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: steps.length,
+                onPageChanged: (index) {
+                  if (_pageIndex == index || !mounted) return;
+                  setState(() => _pageIndex = index);
+                },
                 itemBuilder: (context, index) {
                   return Padding(
                     padding: const EdgeInsets.all(20),
@@ -276,10 +318,13 @@ class _AshaProfileQuestionnaireScreenState
                   if (_pageIndex > 0) const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _isCurrentStepValid() ? _goNext : null,
+                      onPressed: canProceed ? _goNext : null,
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(0, 54),
                         backgroundColor: const Color(0xFF2368AF),
+                        disabledBackgroundColor: const Color(0xFFB8C7D8),
+                        foregroundColor: Colors.white,
+                        disabledForegroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
                         ),
@@ -314,30 +359,32 @@ class _QuestionStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 20),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF18314F),
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 20),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF18314F),
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          subtitle,
-          style: const TextStyle(
-            fontSize: 16,
-            height: 1.45,
-            color: Color(0xFF617087),
+          const SizedBox(height: 10),
+          Text(
+            subtitle,
+            style: const TextStyle(
+              fontSize: 16,
+              height: 1.45,
+              color: Color(0xFF617087),
+            ),
           ),
-        ),
-        const SizedBox(height: 28),
-        child,
-      ],
+          const SizedBox(height: 28),
+          child,
+        ],
+      ),
     );
   }
 }
@@ -346,12 +393,14 @@ class _StyledTextField extends StatelessWidget {
   const _StyledTextField({
     required this.controller,
     required this.hintText,
+    this.onChanged,
     this.keyboardType,
     this.textCapitalization = TextCapitalization.words,
   });
 
   final TextEditingController controller;
   final String hintText;
+  final ValueChanged<String>? onChanged;
   final TextInputType? keyboardType;
   final TextCapitalization textCapitalization;
 
@@ -359,6 +408,7 @@ class _StyledTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      onChanged: onChanged,
       keyboardType: keyboardType,
       textCapitalization: textCapitalization,
       decoration: InputDecoration(
