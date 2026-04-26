@@ -6,6 +6,7 @@ import 'package:jansetu/core/services/location_service.dart';
 import 'package:jansetu/core/services/speech_service.dart';
 import 'package:jansetu/features/chat/presentation/screens/chat_screen.dart';
 import 'package:jansetu/features/onboarding/presentation/bloc/onboarding_bloc.dart';
+import 'package:jansetu/sync_queue.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -276,15 +277,19 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildNavItem(icon: Icons.home, label: 'navHome'.tr(), isActive: true),
           _buildNavItem(icon: Icons.chat_bubble_outline, label: 'navAskAI'.tr()),
           _buildNavItem(icon: Icons.location_on_outlined, label: 'navNearby'.tr()),
-          _buildNavItem(icon: Icons.assignment_outlined, label: 'navHistory'.tr()),
+          _buildNavItem(
+            icon: Icons.assignment_outlined,
+            label: 'navHistory'.tr(),
+            onTap: () => SyncQueue.showSyncQueue(context),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem({required IconData icon, required String label, bool isActive = false}) {
+  Widget _buildNavItem({required IconData icon, required String label, bool isActive = false, VoidCallback? onTap}) {
     return InkWell(
-      onTap: () {},
+      onTap: onTap ?? () {},
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         child: Column(

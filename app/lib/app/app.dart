@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jansetu/core/theme/app_theme.dart';
+import 'package:jansetu/features/asha/presentation/screens/asha_dashboard_screen.dart';
 import 'package:jansetu/features/home/screens/home_screen.dart';
 import 'package:jansetu/features/onboarding/data/onboarding_repository.dart';
+import 'package:jansetu/features/onboarding/domain/models/user_role.dart';
 import 'package:jansetu/features/onboarding/presentation/bloc/onboarding_bloc.dart';
 import 'package:jansetu/features/onboarding/presentation/bloc/onboarding_event.dart';
 import 'package:jansetu/features/onboarding/presentation/bloc/onboarding_state.dart';
@@ -63,14 +65,14 @@ class _OnboardingRouter extends StatelessWidget {
               ),
             );
           },
-          child: _screenForStatus(state.status),
+          child: _screenForState(state),
         );
       },
     );
   }
 
-  Widget _screenForStatus(OnboardingStatus status) {
-    switch (status) {
+  Widget _screenForState(OnboardingState state) {
+    switch (state.status) {
       case OnboardingStatus.initial:
         return const _SplashPlaceholder(key: ValueKey('splash'));
       case OnboardingStatus.languageSelect:
@@ -78,6 +80,9 @@ class _OnboardingRouter extends StatelessWidget {
       case OnboardingStatus.roleSelect:
         return const RoleSelectScreen(key: ValueKey('role'));
       case OnboardingStatus.completed:
+        if (state.selectedRole == UserRole.healthWorker) {
+          return const AshaDashboardScreen(key: ValueKey('asha_home'));
+        }
         return const HomeScreen(key: ValueKey('home'));
       case OnboardingStatus.error:
         return const LanguageSelectScreen(key: ValueKey('language_error'));
