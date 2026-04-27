@@ -18,6 +18,7 @@ class SecureStorageService {
   static const String _keyLanguage = 'jansetu_language';
   static const String _keyUserRole = 'jansetu_user_role';
   static const String _keyOnboardingComplete = 'jansetu_onboarding_complete';
+  static const String _keyAshaWorkerProfile = 'jansetu_asha_worker_profile';
 
   // ── Language ────────────────────────────────────────────────────
   Future<void> writeLanguage(String languageCode) async {
@@ -45,6 +46,14 @@ class SecureStorageService {
   Future<bool> isOnboardingComplete() async {
     final value = await _storage.read(key: _keyOnboardingComplete);
     return value == 'true';
+  }
+
+  Future<void> writeAshaWorkerProfile(String jsonValue) async {
+    await _storage.write(key: _keyAshaWorkerProfile, value: jsonValue);
+  }
+
+  Future<String?> readAshaWorkerProfile() async {
+    return _storage.read(key: _keyAshaWorkerProfile);
   }
 
   // ── Reset (useful for development / testing) ────────────────────

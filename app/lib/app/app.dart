@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jansetu/core/theme/app_theme.dart';
-import 'package:jansetu/features/asha/presentation/screens/asha_dashboard_screen.dart';
+import 'package:jansetu/features/asha/presentation/screens/asha_entry_router_screen.dart';
 import 'package:jansetu/features/home/screens/home_screen.dart';
 import 'package:jansetu/features/onboarding/data/onboarding_repository.dart';
 import 'package:jansetu/features/onboarding/domain/models/user_role.dart';
@@ -81,7 +81,7 @@ class _OnboardingRouter extends StatelessWidget {
         return const RoleSelectScreen(key: ValueKey('role'));
       case OnboardingStatus.completed:
         if (state.selectedRole == UserRole.healthWorker) {
-          return const AshaDashboardScreen(key: ValueKey('asha_home'));
+          return const AshaEntryRouterScreen(key: ValueKey('asha_entry'));
         }
         return const HomeScreen(key: ValueKey('home'));
       case OnboardingStatus.error:

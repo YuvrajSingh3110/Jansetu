@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jansetu/features/asha/presentation/asha_navigation.dart';
+import 'package:jansetu/features/asha/presentation/screens/asha_profile_screen.dart';
 
 class AshaScaffold extends StatelessWidget {
   const AshaScaffold({
@@ -41,13 +42,33 @@ class AshaScaffold extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: _headerText,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            color: _headerText,
+                            fontSize: 30,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const AshaProfileScreen(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.account_circle_outlined,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
