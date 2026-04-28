@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:equatable/equatable.dart';
 
 sealed class ChatEvent extends Equatable {
@@ -9,10 +11,34 @@ sealed class ChatEvent extends Equatable {
 
 class SendMessage extends ChatEvent {
   final String text;
-  const SendMessage(this.text);
+  final Uint8List? imageBytes;
+  final String? imageName;
+
+  const SendMessage(
+      this.text, {
+        this.imageBytes,
+        this.imageName,
+      });
 
   @override
-  List<Object?> get props => [text];
+  List<Object?> get props => [text, imageBytes, imageName];
+}
+
+class ImageAttachmentSelected extends ChatEvent {
+  final Uint8List imageBytes;
+  final String imageName;
+
+  const ImageAttachmentSelected({
+    required this.imageBytes,
+    required this.imageName,
+  });
+
+  @override
+  List<Object?> get props => [imageBytes, imageName];
+}
+
+class ImageAttachmentCleared extends ChatEvent {
+  const ImageAttachmentCleared();
 }
 
 class VoiceInputStarted extends ChatEvent {

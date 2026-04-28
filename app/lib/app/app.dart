@@ -10,6 +10,7 @@ import 'package:jansetu/features/onboarding/presentation/bloc/onboarding_event.d
 import 'package:jansetu/features/onboarding/presentation/bloc/onboarding_state.dart';
 import 'package:jansetu/features/onboarding/presentation/screens/language_select_screen.dart';
 import 'package:jansetu/features/onboarding/presentation/screens/role_select_screen.dart';
+import 'package:jansetu/features/onboarding/presentation/screens/personal_details_screen.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 
@@ -23,7 +24,7 @@ class JansetuApp extends StatelessWidget {
         repository: OnboardingRepository(),
       )..add(const OnboardingStatusChecked()),
       child: MaterialApp(
-        title: 'Jansetu — Aarogya Sentinel',
+        title: 'Jansetu',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         localizationsDelegates: context.localizationDelegates,
@@ -79,6 +80,8 @@ class _OnboardingRouter extends StatelessWidget {
         return const LanguageSelectScreen(key: ValueKey('language'));
       case OnboardingStatus.roleSelect:
         return const RoleSelectScreen(key: ValueKey('role'));
+      case OnboardingStatus.personalDetails:
+        return const PersonalDetailsScreen(key: ValueKey('personal_details'));
       case OnboardingStatus.completed:
         if (state.selectedRole == UserRole.healthWorker) {
           return const AshaEntryRouterScreen(key: ValueKey('asha_entry'));
@@ -133,7 +136,7 @@ class _SplashPlaceholder extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Aarogya Sentinel',
+              'Jansetu',
               style: AppTextStyles.appTitle.copyWith(
                 color: AppColors.textOnPrimary,
               ),

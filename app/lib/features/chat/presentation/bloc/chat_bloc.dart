@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:uuid/uuid.dart';
 import 'package:jansetu/core/services/llm_service.dart';
 import 'package:jansetu/core/services/speech_service.dart';
@@ -23,6 +25,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<VoiceInputStopped>(_onVoiceInputStopped);
     on<IncomingStreamChunk>(_onIncomingStreamChunk);
     on<ToggleSpeechMute>(_onToggleSpeechMute);
+    on<ImageAttachmentSelected>(_onImageAttachmentSelected);
+    on<ImageAttachmentCleared>(_onImageAttachmentCleared);
 
     // Initialise LLM and Speech services
     _llmService.initialize();
@@ -48,12 +52,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     SendMessage event,
     Emitter<ChatState> emit,
   ) async {
-    if (event.text.trim().isEmpty) return;
+    final trimmedText = event.text.trim();
+    final imageBytes = event.imageBytes ?? state.selectedImageBytes;
+    final imageName = event.imageName ?? state.selectedImageName;
 
+    if (trimmedText.isEmpty && imageBytes == null) return;
     final userMsg = ChatMessage(
       id: _uuid.v4(),
-      text: event.text,
+      text: trimmedText,
       isUser: true,
+      imageBytes: imageBytes,
+      imageName: imageName,
     );
 
     final aiMsgId = _uuid.v4();
@@ -66,18 +75,44 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     emit(state.copyWith(
       messages: List.from(state.messages)..add(userMsg)..add(initialAiMsg),
+      clearSelectedImage: true,
     ));
 
-    final stream = _llmService.getResponseStream(event.text);
-    
-    await for (final chunk in stream) {
-      if (!isClosed) {
-        add(IncomingStreamChunk(messageId: aiMsgId, chunkText: chunk));
-      }
-    }
+    final message = imageBytes != null
+        ? Message.withImage(
+      text: trimmedText,
+      imageBytes: imageBytes,
+      isUser: true,
+    )
+        : Message.text(
+      text: trimmedText,
+      isUser: true,
+    );
 
-    if (!isClosed) {
-      add(IncomingStreamChunk(messageId: aiMsgId, chunkText: '', isComplete: true));
+    try {
+      final stream = _llmService.getResponseStream(message);
+
+      await for (final chunk in stream) {
+        if (!isClosed) {
+          add(IncomingStreamChunk(messageId: aiMsgId, chunkText: chunk));
+        }
+      }
+
+      if (!isClosed) {
+        add(IncomingStreamChunk(
+          messageId: aiMsgId,
+          chunkText: '',
+          isComplete: true,
+        ));
+      }
+    } catch (error) {
+      if (!isClosed) {
+        add(IncomingStreamChunk(
+          messageId: aiMsgId,
+          chunkText:
+          'Unable to process this image right now. Please try another photo or restart the model.\n\n$error',
+          isComplete: true,
+        ));      }
     }
   }
 
@@ -112,6 +147,23 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
 
     emit(state.copyWith(messages: updatedMessages));
+  }
+
+  void _onImageAttachmentSelected(
+      ImageAttachmentSelected event,
+      Emitter<ChatState> emit,
+      ) {
+    emit(state.copyWith(
+      selectedImageBytes: event.imageBytes,
+      selectedImageName: event.imageName,
+    ));
+  }
+
+  void _onImageAttachmentCleared(
+      ImageAttachmentCleared event,
+      Emitter<ChatState> emit,
+      ) {
+    emit(state.copyWith(clearSelectedImage: true));
   }
 
   Future<void> _onVoiceInputStarted(

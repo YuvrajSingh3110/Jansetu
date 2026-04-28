@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -10,14 +12,27 @@ import 'package:jansetu/features/chat/presentation/widgets/chat_input_bar.dart';
 
 class ChatScreen extends StatelessWidget {
   final String? initialPrompt;
+  final Uint8List? initialImageBytes;
+  final String? initialImageName;
 
-  const ChatScreen({super.key, this.initialPrompt});
+  const ChatScreen({
+    super.key,
+    this.initialPrompt,
+    this.initialImageBytes,
+    this.initialImageName,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) {
         final bloc = ChatBloc();
+        if (initialImageBytes != null && initialImageName != null) {
+          bloc.add(ImageAttachmentSelected(
+            imageBytes: initialImageBytes!,
+            imageName: initialImageName!,
+          ));
+        }
         if (initialPrompt != null && initialPrompt!.isNotEmpty) {
           bloc.add(SendMessage(initialPrompt!));
         }

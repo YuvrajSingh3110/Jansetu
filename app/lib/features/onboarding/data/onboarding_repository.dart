@@ -35,6 +35,26 @@ class OnboardingRepository implements OnboardingRepositoryInterface {
   }
 
   @override
+  Future<void> saveGender(String gender) async {
+    await _storage.writeGender(gender);
+  }
+
+  @override
+  Future<String?> getSavedGender() async {
+    return _storage.readGender();
+  }
+
+  @override
+  Future<void> saveAge(int age) async {
+    await _storage.writeAge(age);
+  }
+
+  @override
+  Future<int?> getSavedAge() async {
+    return _storage.readAge();
+  }
+
+  @override
   Future<void> completeOnboarding() async {
     await _storage.markOnboardingComplete();
   }

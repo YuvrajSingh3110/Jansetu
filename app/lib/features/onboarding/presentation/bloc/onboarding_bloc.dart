@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:jansetu/features/onboarding/domain/models/user_role.dart';
 import 'package:jansetu/features/onboarding/domain/repositories/onboarding_repository.dart';
 import 'package:jansetu/features/onboarding/presentation/bloc/onboarding_event.dart';
 import 'package:jansetu/features/onboarding/presentation/bloc/onboarding_state.dart';
@@ -13,6 +14,9 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     on<LanguageSelected>(_onLanguageSelected);
     on<LanguageContinuePressed>(_onLanguageContinue);
     on<RoleSelected>(_onRoleSelected);
+    on<RoleContinuePressed>(_onRoleContinue);
+    on<GenderSelected>(_onGenderSelected);
+    on<AgeSelected>(_onAgeSelected);
     on<OnboardingCompleted>(_onCompleted);
   }
 
@@ -26,10 +30,14 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       if (isComplete) {
         final savedLanguage = await _repository.getSavedLanguage();
         final savedRole = await _repository.getSavedUserRole();
+        final savedGender = await _repository.getSavedGender();
+        final savedAge = await _repository.getSavedAge();
         emit(state.copyWith(
           status: OnboardingStatus.completed,
           selectedLanguage: savedLanguage,
           selectedRole: savedRole,
+          selectedGender: savedGender,
+          selectedAge: savedAge,
         ));
       } else {
         emit(state.copyWith(status: OnboardingStatus.languageSelect));
@@ -75,14 +83,46 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     emit(state.copyWith(selectedRole: event.role));
   }
 
-  /// User confirmed role → persist everything and mark complete.
-  Future<void> _onCompleted(
-    OnboardingCompleted event,
+  /// User pressed "Continue" after selecting a role.
+  Future<void> _onRoleContinue(
+    RoleContinuePressed event,
     Emitter<OnboardingState> emit,
   ) async {
     if (state.selectedRole == null) return;
     try {
       await _repository.saveUserRole(state.selectedRole!);
+
+      if (state.selectedRole == UserRole.villagePerson) {
+        emit(state.copyWith(status: OnboardingStatus.personalDetails));
+      } else {
+        await _repository.completeOnboarding();
+        emit(state.copyWith(status: OnboardingStatus.completed));
+      }
+    } catch (e) {
+      emit(state.copyWith(
+        status: OnboardingStatus.error,
+        errorMessage: 'Failed to save role: $e',
+      ));
+    }
+  }
+
+  void _onGenderSelected(GenderSelected event, Emitter<OnboardingState> emit) {
+    emit(state.copyWith(selectedGender: event.gender));
+  }
+
+  void _onAgeSelected(AgeSelected event, Emitter<OnboardingState> emit) {
+    emit(state.copyWith(selectedAge: event.age));
+  }
+
+  /// User confirmed details → persist everything and mark complete.
+  Future<void> _onCompleted(
+    OnboardingCompleted event,
+    Emitter<OnboardingState> emit,
+  ) async {
+    if (state.selectedGender == null) return;
+    try {
+      await _repository.saveGender(state.selectedGender!);
+      await _repository.saveAge(state.selectedAge);
       await _repository.completeOnboarding();
       emit(state.copyWith(status: OnboardingStatus.completed));
     } catch (e) {

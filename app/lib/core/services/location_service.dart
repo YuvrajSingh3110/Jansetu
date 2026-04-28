@@ -6,9 +6,44 @@ class LocationService {
   static final LocationService _instance = LocationService._internal();
   factory LocationService() => _instance;
 
+  Future<Position?> getCurrentPosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return null;
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return null;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return null;
+    }
+
+    try {
+      return await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+      accuracy: LocationAccuracy.low,
+      timeLimit: Duration(seconds: 10),
+    ),
+    );
+    } catch (_) {
+    return null;
+    }
+  }
+
+
   /// Requests permission and gets the current locality/subLocality (village/city name).
   /// Returns a default fallback if location services are disabled or permission denied.
   Future<String> getCurrentLocality({String fallback = 'Village'}) async {
+    final position = await getCurrentPosition();
+    if (position == null) return fallback;
+
     bool serviceEnabled;
     LocationPermission permission;
 

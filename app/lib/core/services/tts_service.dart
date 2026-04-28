@@ -39,6 +39,22 @@ class TtsService {
 
   bool get isMuted => _isMuted;
 
+  Future<void> setLanguageForLocale(String localeCode) async {
+    final language = switch (localeCode) {
+      'hi' => 'hi-IN',
+      'or' => 'or-IN',
+      'bn' => 'bn-IN',
+      'pa' => 'pa-IN',
+      'bho' => 'hi-IN',
+      _ => 'en-IN',
+    };
+    try {
+      await _flutterTts.setLanguage(language);
+    } catch (e) {
+      developer.log('Failed to set TTS language: $e', name: 'TtsService');
+    }
+  }
+
   void setMuted(bool muted) {
     _isMuted = muted;
     if (_isMuted) {

@@ -1,3 +1,4 @@
+import 'package:flutter_gemma/core/message.dart';
 import 'package:jansetu/core/services/llm_service.dart';
 
 class PhotoAssessmentResult {
@@ -69,7 +70,7 @@ Note: <sentence>
     String extraNote = 'Consulting Gemma model...';
 
     try {
-      final responseStream = _llmService.getResponseStream(prompt);
+      final responseStream = _llmService.getResponseStream(prompt as Message);
       final fullResponse = await responseStream.join('');
 
       final summaryMatch = RegExp(r'Summary:\s*(.*)').firstMatch(fullResponse);

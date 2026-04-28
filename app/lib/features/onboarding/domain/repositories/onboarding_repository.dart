@@ -9,6 +9,12 @@ abstract class OnboardingRepositoryInterface {
   Future<void> saveUserRole(UserRole role);
   Future<UserRole?> getSavedUserRole();
 
+  Future<void> saveGender(String gender);
+  Future<String?> getSavedGender();
+
+  Future<void> saveAge(int age);
+  Future<int?> getSavedAge();
+
   Future<void> completeOnboarding();
   Future<bool> isOnboardingComplete();
 }

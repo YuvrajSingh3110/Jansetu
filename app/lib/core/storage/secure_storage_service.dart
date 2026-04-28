@@ -17,6 +17,8 @@ class SecureStorageService {
   // ── Storage keys ────────────────────────────────────────────────
   static const String _keyLanguage = 'jansetu_language';
   static const String _keyUserRole = 'jansetu_user_role';
+  static const String _keyGender = 'jansetu_gender';
+  static const String _keyAge = 'jansetu_age';
   static const String _keyOnboardingComplete = 'jansetu_onboarding_complete';
   static const String _keyAshaWorkerProfile = 'jansetu_asha_worker_profile';
 
@@ -36,6 +38,26 @@ class SecureStorageService {
 
   Future<String?> readUserRole() async {
     return _storage.read(key: _keyUserRole);
+  }
+
+  // ── Gender ─────────────────────────────────────────────────────
+  Future<void> writeGender(String gender) async {
+    await _storage.write(key: _keyGender, value: gender);
+  }
+
+  Future<String?> readGender() async {
+    return _storage.read(key: _keyGender);
+  }
+
+  // ── Age ────────────────────────────────────────────────────────
+  Future<void> writeAge(int age) async {
+    await _storage.write(key: _keyAge, value: age.toString());
+  }
+
+  Future<int?> readAge() async {
+    final value = await _storage.read(key: _keyAge);
+    if (value == null) return null;
+    return int.tryParse(value);
   }
 
   // ── Onboarding status ───────────────────────────────────────────

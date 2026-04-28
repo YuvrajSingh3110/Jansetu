@@ -35,7 +35,30 @@ class LanguageContinuePressed extends OnboardingEvent {
   const LanguageContinuePressed();
 }
 
-/// User confirmed their role → persist everything and finish.
+/// User pressed "Continue" on the role selection screen.
+class RoleContinuePressed extends OnboardingEvent {
+  const RoleContinuePressed();
+}
+
+/// User selected a gender.
+class GenderSelected extends OnboardingEvent {
+  final String gender;
+  const GenderSelected(this.gender);
+
+  @override
+  List<Object?> get props => [gender];
+}
+
+/// User selected an age.
+class AgeSelected extends OnboardingEvent {
+  final int age;
+  const AgeSelected(this.age);
+
+  @override
+  List<Object?> get props => [age];
+}
+
+/// User confirmed their details → persist everything and finish.
 class OnboardingCompleted extends OnboardingEvent {
   const OnboardingCompleted();
 }
