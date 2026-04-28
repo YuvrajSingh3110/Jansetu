@@ -101,7 +101,7 @@ class LanguageSelectScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Aarogya Sentinel',
+            'Jansetu',
             style: AppTextStyles.appTitle.copyWith(
               color: AppColors.textOnPrimary,
             ),

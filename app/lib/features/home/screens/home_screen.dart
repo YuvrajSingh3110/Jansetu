@@ -3,11 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:jansetu/core/theme/app_theme.dart';
 import 'package:jansetu/core/services/location_service.dart';
+import 'package:jansetu/core/widgets/image_source_sheet.dart';
 import 'package:jansetu/core/services/speech_service.dart';
+import 'package:jansetu/features/alerts/screens/alert_detail_screen.dart';
 import 'package:jansetu/features/chat/presentation/screens/chat_screen.dart';
-import 'package:jansetu/features/photo/presentation/screens/photo_assessment_screen.dart';
+import 'package:jansetu/features/history/screens/history_screen.dart';
+import 'package:jansetu/features/nearby/screens/nearby_screen.dart';
 import 'package:jansetu/features/onboarding/presentation/bloc/onboarding_bloc.dart';
-import 'package:jansetu/sync_queue.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _villageName = '...';
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -42,65 +45,61 @@ class _HomeScreenState extends State<HomeScreen> {
         bottom: false,
         child: Column(
           children: [
-            _buildHeader(),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                child: Column(
-                  children: [
-                    _buildAlertBox(),
-                    const SizedBox(height: 24),
-                    _buildMicCard(),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(child: _buildActionCard(
-                          icon: Icons.camera_alt,
-                          iconColor: Colors.black87,
-                          title: 'photoCheckTitle'.tr(),
-                          subtitle: 'photoCheckSubtitle'.tr(),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => PhotoAssessmentScreen(
-                                  title: 'Photo assessment',
-                                  subtitle: 'Shared village photo pipeline',
-                                  saveButtonLabel: 'Save assessment',
-                                  onSave: (imagePath, result) async {
-                                    if (!mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Assessment saved: ${result.primaryFinding}',
-                                        ),
-                                      ),
-                                    );
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        )),
-                        const SizedBox(width: 16),
-                        Expanded(child: _buildActionCard(
-                          icon: Icons.medication,
-                          iconColor: Colors.amber.shade700,
-                          title: 'medicinesTitle'.tr(),
-                          subtitle: 'medicinesSubtitle'.tr(),
-                          onTap: () {},
-                        )),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-                  ],
-                ),
+              child: IndexedStack(
+                index: _selectedIndex,
+                children: [
+                  _buildHomeView(),
+                  const NearbyScreen(),
+                  const HistoryScreen(),
+                ],
               ),
             ),
             _buildBottomNav(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHomeView() {
+    return Column(
+      children: [
+        _buildHeader(),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: Column(
+              children: [
+                _buildAlertBox(),
+                const SizedBox(height: 24),
+                _buildMicCard(),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(child: _buildActionCard(
+                      icon: Icons.camera_alt,
+                      iconColor: Colors.black87,
+                      title: 'photoCheckTitle'.tr(),
+                      subtitle: 'photoCheckSubtitle'.tr(),
+                      onTap: _openPhotoCheck,
+                    )),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildActionCard(
+                      icon: Icons.medication,
+                      iconColor: Colors.amber.shade700,
+                      title: 'medicinesTitle'.tr(),
+                      subtitle: 'medicinesSubtitle'.tr(),
+                      onTap: () {},
+                    )),
+                  ],
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -130,8 +129,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildAlertBox() {
     return InkWell(
-      onTap: () {},
-      borderRadius: BorderRadius.circular(4),
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const AlertDetailScreen()),
+        );
+      },      borderRadius: BorderRadius.circular(4),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
@@ -284,6 +286,20 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _openPhotoCheck() async {
+    final pickedImage = await showImageSourceSheet(context);
+    if (!mounted || pickedImage == null) return;
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChatScreen(
+          initialImageBytes: pickedImage.bytes,
+          initialImageName: pickedImage.name,
+        ),
+      ),
+    );
+  }
+
   Widget _buildBottomNav() {
     return Container(
       decoration: BoxDecoration(
@@ -296,13 +312,23 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(icon: Icons.home, label: 'navHome'.tr(), isActive: true),
-          _buildNavItem(icon: Icons.chat_bubble_outline, label: 'navAskAI'.tr()),
-          _buildNavItem(icon: Icons.location_on_outlined, label: 'navNearby'.tr()),
+          _buildNavItem(
+            icon: Icons.home,
+            label: 'navHome'.tr(),
+            isActive: _selectedIndex == 0,
+            onTap: () => setState(() => _selectedIndex = 0),
+          ),
+          _buildNavItem(
+            icon: Icons.location_on_outlined,
+            label: 'navNearby'.tr(),
+            isActive: _selectedIndex == 1,
+            onTap: () => setState(() => _selectedIndex = 1),
+          ),
           _buildNavItem(
             icon: Icons.assignment_outlined,
             label: 'navHistory'.tr(),
-            onTap: () => SyncQueue.showSyncQueue(context),
+            isActive: _selectedIndex == 2,
+            onTap: () => setState(() => _selectedIndex = 2),
           ),
         ],
       ),

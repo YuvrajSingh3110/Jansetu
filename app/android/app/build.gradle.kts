@@ -7,7 +7,7 @@ plugins {
 android {
     namespace = "com.example.jansetu"
     compileSdk = 36
-    ndkVersion = "28.2.13676358"
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -29,6 +29,8 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 

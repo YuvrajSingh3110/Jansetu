@@ -11,9 +11,21 @@ class LlmService {
   bool _isInitialized = false;
   InferenceModel? _model;
   InferenceChat? _chat;
+  bool _chatSupportsImages = false;
 
   static const _modelPath =
       '/storage/emulated/0/Download/gemma-4-E2B-it.litertlm';
+  static const String _jansetuInstruction = '''
+You are Jansetu's on-device epidemiological extraction model.
+You convert community health worker or villager speech transcripts into compact disease-surveillance signals.
+Privacy is mandatory: never output names, phone numbers, Aadhaar numbers, exact addresses, household identifiers, or other personal identifiers.
+Normalize symptoms to short English tokens.
+Prefer conservative extraction over guessing.
+Keep responses brief.
+Do not use markdown, bullets, *, #, or tables.
+Return plain text only.
+If the input is unclear, say what is uncertain briefly instead of inventing details.
+''';
 
   Future<bool> _requestStoragePermission() async {
     // Android 13+ uses granular media permissions
@@ -61,9 +73,6 @@ class LlmService {
         ).fromFile(_modelPath).install();
       }
 
-      _model = await FlutterGemma.getActiveModel(maxTokens: 1024);
-      _chat = await _model!.createChat();
-
       _isInitialized = true;
       developer.log('FlutterGemma initialized.', name: 'LlmService');
     } catch (e) {
@@ -72,30 +81,123 @@ class LlmService {
     }
   }
 
-  Stream<String> getResponseStream(String prompt) async* {
-    if (!_isInitialized) await initialize();
+  Future<void> _ensureChat({required bool supportImage}) async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    if (_chat != null && _model != null && _chatSupportsImages == supportImage) {
+      return;
+    }
 
     if (_chat != null) {
-      await _chat!.addQuery(Message.text(text: prompt, isUser: true));
+      await _chat!.clearHistory();
+      _chat = null;
+    }
+
+    if (_model != null) {
+      await _model!.close();
+      _model = null;
+    }
+
+    _model = await FlutterGemma.getActiveModel(
+      maxTokens: 1024,
+      supportImage: supportImage,
+      maxNumImages: supportImage ? 1 : null,
+    );
+    _chat = await _model!.createChat(
+      supportImage: supportImage,
+    );
+    _chatSupportsImages = supportImage;
+
+    developer.log(
+      'Created Gemma chat session. supportImage=$supportImage',
+      name: 'LlmService',
+    );
+  }
+
+  Stream<String> getResponseStream(Message prompt) async* {
+    if (!_isInitialized) await initialize();
+
+    try {
+      final requiresImage = prompt.hasImage;
+      await _ensureChat(supportImage: requiresImage);
+
+      Message finalPrompt = prompt;
+      if (prompt.hasImage && prompt.imageBytes != null) {
+        final processed = await MultimodalImageHandler.processImageForAI(
+          imageBytes: prompt.imageBytes!,
+          modelType: ModelType.gemmaIt,
+        );
+
+        if (!processed.success || processed.processedImage == null) {
+          final msg = processed.error?.message ??
+              'The selected image could not be prepared for the model.';
+          for (final word in msg.split(' ')) {
+            await Future.delayed(const Duration(milliseconds: 40));
+            yield '$word ';
+          }
+          return;
+        }
+
+        finalPrompt = MultimodalImageHandler.createMultimodalMessage(
+          text: _buildGuidedPrompt(
+            prompt.text.trim().isEmpty
+                ? 'Describe what you see in this image for disease surveillance.'
+                : prompt.text,
+          ),
+          processedImage: processed.processedImage!,
+          modelType: ModelType.gemmaIt,
+          isUser: true,
+        );
+      } else {
+        finalPrompt = Message.text(
+          text: _buildGuidedPrompt(prompt.text),
+          isUser: prompt.isUser,
+        );
+      }
+
+      if (_chat == null) {
+        const msg = 'Model session could not be created.';
+        for (final word in msg.split(' ')) {
+          await Future.delayed(const Duration(milliseconds: 40));
+          yield '$word ';
+        }
+        return;
+      }
+
+      await _chat!.addQuery(finalPrompt);
       await for (final response in _chat!.generateChatResponseAsync()) {
         if (response is TextResponse) {
           yield response.token;
         }
       }
       return;
-    }
-
-    const msg =
-        'Model not loaded. Please grant storage permission and restart the app.';
-    for (final word in msg.split(' ')) {
-      await Future.delayed(const Duration(milliseconds: 80));
-      yield '$word ';
+    } catch (error, stackTrace) {
+      developer.log(
+        'Multimodal/text inference failed: $error',
+        name: 'LlmService',
+        stackTrace: stackTrace,
+      );
+      final fallback = prompt.hasImage
+          ? 'Image processing failed in the current Gemma session. The model may support images, but this app could not open a stable multimodal session for that photo.'
+          : 'The model session failed while generating a response.';
+      for (final word in fallback.split(' ')) {
+        await Future.delayed(const Duration(milliseconds: 40));
+        yield '$word ';
+      }
     }
   }
 
-  Future<void> clearChat() async => _chat?.clearHistory();
-}
+  Future<void> clearChat() async {
+    await _chat?.clearHistory();
+  }
 
+  String _buildGuidedPrompt(String userPrompt) {
+    final cleanedPrompt = userPrompt.trim();
+    return '$_jansetuInstruction\n\nUser input:\n$cleanedPrompt';
+  }
+}
 
 // import 'dart:async';
 // import 'dart:developer' as developer;

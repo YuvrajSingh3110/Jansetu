@@ -119,7 +119,7 @@ class RoleSelectScreen extends StatelessWidget {
               ? () {
                   context
                       .read<OnboardingBloc>()
-                      .add(const OnboardingCompleted());
+                      .add(const RoleContinuePressed());
                 }
               : null,
           style: ElevatedButton.styleFrom(
