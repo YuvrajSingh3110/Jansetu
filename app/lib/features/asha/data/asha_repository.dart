@@ -46,8 +46,16 @@ class AshaRepository {
   }
 
   Future<BootstrapData> fetchBootstrap() async {
+    final workerProfile = await _workerProfileRepository.loadProfile();
+    final resolvedDistrictId = workerProfile?.districtId.trim().isNotEmpty == true
+        ? workerProfile!.districtId.trim()
+        : _districtId;
+    return fetchBootstrapForDistrict(resolvedDistrictId);
+  }
+
+  Future<BootstrapData> fetchBootstrapForDistrict(String districtId) async {
     final response = await _client.get(
-      Uri.parse('$_baseUrl/api/android/bootstrap?districtId=$_districtId'),
+      Uri.parse('$_baseUrl/api/android/bootstrap?districtId=${Uri.encodeQueryComponent(districtId)}'),
       headers: _authHeaders,
     );
     if (response.statusCode != 200) {
@@ -60,35 +68,75 @@ class AshaRepository {
     return bootstrap;
   }
 
-  Future<ChwProfile> fetchProfile({String? employeeId}) async {
+  Future<List<DistrictInfo>> loadAvailableDistricts() async {
+    final cachedBootstrap = await _cache.readBootstrap();
+    if (cachedBootstrap != null) {
+      return [cachedBootstrap.district];
+    }
+
+    try {
+      final bootstrap = await fetchBootstrapForDistrict(_districtId);
+      return [bootstrap.district];
+    } catch (_) {
+      return const [
+        DistrictInfo(
+          id: _districtId,
+          name: 'Varanasi',
+          state: 'Uttar Pradesh',
+        ),
+      ];
+    }
+  }
+
+  Future<ChwProfile?> lookupProfile(String employeeId) async {
+    try {
+      return await fetchProfile(
+        employeeId: employeeId,
+        throwOnNotFound: true,
+        allowCachedFallback: false,
+      );
+    } on ChwProfileNotFoundException {
+      return null;
+    }
+  }
+
+  Future<ChwProfile> fetchProfile({
+    String? employeeId,
+    bool allowCachedFallback = true,
+    bool throwOnNotFound = false,
+  }) async {
     final workerProfile = await _workerProfileRepository.loadProfile();
-    final workerEmployeeId = workerProfile?.employeeId.trim();
+    final workerEmployeeId = _normalizeEmployeeId(workerProfile?.employeeId);
     final resolvedEmployeeId = employeeId ??
-        ((workerEmployeeId != null && workerEmployeeId.isNotEmpty)
+        ((workerEmployeeId.isNotEmpty)
             ? workerEmployeeId
             : _defaultEmployeeId);
+    final cachedProfile = await _cache.readProfile();
     final response = await _client.get(
-      Uri.parse('$_baseUrl/api/android/chw/profile?employeeId=$resolvedEmployeeId'),
+      Uri.parse(
+        '$_baseUrl/api/android/chw/profile?employeeId=${Uri.encodeQueryComponent(_normalizeEmployeeId(resolvedEmployeeId))}',
+      ),
       headers: _authHeaders,
     );
     if (response.statusCode == 404) {
-      // Return a skeleton profile if not found on server, using local setup if available
-      return ChwProfile(
-        id: '-1',
-        employeeId: resolvedEmployeeId,
-        name: workerProfile?.fullName ?? 'CHW User',
-        phone: workerProfile?.phoneNumber ?? '',
-        isActive: true,
-        reportsCount: 0,
-        lastSyncAt: null,
-        block: const ChwBlock(
-          id: 'clb001rampur',
-          name: 'Rampur',
-          villages: [],
-        ),
-      );
+      if (allowCachedFallback &&
+          cachedProfile != null &&
+          cachedProfile.employeeId.toUpperCase() ==
+              _normalizeEmployeeId(resolvedEmployeeId)) {
+        return cachedProfile;
+      }
+      if (throwOnNotFound) {
+        throw ChwProfileNotFoundException(_normalizeEmployeeId(resolvedEmployeeId));
+      }
+      throw Exception('CHW profile failed with 404');
     }
     if (response.statusCode != 200) {
+      if (allowCachedFallback &&
+          cachedProfile != null &&
+          cachedProfile.employeeId.toUpperCase() ==
+              _normalizeEmployeeId(resolvedEmployeeId)) {
+        return cachedProfile;
+      }
       throw Exception('CHW profile failed with ${response.statusCode}');
     }
     final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -100,11 +148,17 @@ class AshaRepository {
   }
 
   Future<List<AshaAlert>> fetchAlerts({String? since}) async {
+    final workerProfile = await _workerProfileRepository.loadProfile();
+    final resolvedDistrictId = workerProfile?.districtId.trim().isNotEmpty == true
+        ? workerProfile!.districtId.trim()
+        : _districtId;
     final sinceQuery = since == null || since.isEmpty
         ? ''
         : '&since=${Uri.encodeQueryComponent(since)}';
     final response = await _client.get(
-      Uri.parse('$_baseUrl/api/android/alerts?districtId=$_districtId$sinceQuery'),
+      Uri.parse(
+        '$_baseUrl/api/android/alerts?districtId=${Uri.encodeQueryComponent(resolvedDistrictId)}$sinceQuery',
+      ),
       headers: _authHeaders,
     );
     if (response.statusCode != 200) {
@@ -125,20 +179,40 @@ class AshaRepository {
   Future<ChwProfile?> loadCachedProfile() => _cache.readProfile();
   Future<List<AshaAlert>> loadCachedAlerts() => _cache.readAlerts();
 
-  Future<BootstrapData> getBootstrapData() async {
+  Future<BootstrapData> getBootstrapData({bool preferNetwork = true}) async {
     final cached = await _cache.readBootstrap();
-    return cached ?? fetchBootstrap();
+    if (!preferNetwork && cached != null) {
+      return cached;
+    }
+    try {
+      return await fetchBootstrap();
+    } catch (_) {
+      if (cached != null) {
+        return cached;
+      }
+      rethrow;
+    }
   }
 
-  Future<ChwProfile> getActiveProfile() async {
+  Future<ChwProfile> getActiveProfile({bool preferNetwork = true}) async {
     final cached = await _cache.readProfile();
-    return cached ?? fetchProfile();
+    if (!preferNetwork && cached != null) {
+      return cached;
+    }
+    try {
+      return await fetchProfile();
+    } catch (_) {
+      if (cached != null) {
+        return cached;
+      }
+      rethrow;
+    }
   }
 
   Future<DashboardData> loadDashboardData() async {
-    final health = await healthCheck();
     final bootstrap = await getBootstrapData();
-    final profile = await fetchProfile();
+    final health = await _loadHealthWithFallback(bootstrap);
+    final profile = await getActiveProfile();
 
     List<AshaAlert> alerts;
     try {
@@ -317,12 +391,17 @@ class AshaRepository {
   }) async {
     final bootstrap = await getBootstrapData();
     final profile = await getActiveProfile();
+    final workerProfile = await _workerProfileRepository.loadProfile();
     final symptoms = _extractSymptoms(
       transcript,
       bootstrap.symptomCodes,
       extraSymptoms,
     );
-    final villageId = profile.block.villages.isNotEmpty
+    final selectedVillageId = workerProfile?.primaryVillageId.trim() ?? '';
+    final selectedVillageName = workerProfile?.primaryVillage.trim() ?? '';
+    final villageId = selectedVillageId.isNotEmpty
+        ? selectedVillageId
+        : profile.block.villages.isNotEmpty
         ? profile.block.villages.first.id
         : 'clv001rampur';
     final severity = _deriveSeverity(symptoms);
@@ -332,6 +411,11 @@ class AshaRepository {
 
     return {
       'villageId': villageId,
+      'villageName': selectedVillageName.isNotEmpty
+          ? selectedVillageName
+          : profile.block.villages.isNotEmpty
+              ? profile.block.villages.first.name
+              : '',
       'ageGroup': _detectAgeGroup(transcript),
       'gender': _detectGender(transcript),
       'symptoms': symptoms,
@@ -454,6 +538,24 @@ class AshaRepository {
           parsed.day == now.day;
     }).length;
   }
+
+  Future<HealthStatus> _loadHealthWithFallback(BootstrapData bootstrap) async {
+    try {
+      return await healthCheck();
+    } catch (_) {
+      return HealthStatus(
+        status: 'offline',
+        db: 'cached',
+        serverTime: bootstrap.syncedAt.toUtc(),
+        version: 'cached',
+      );
+    }
+  }
+
+  String _normalizeEmployeeId(String? raw) {
+    final cleaned = (raw ?? '').trim().toUpperCase();
+    return cleaned.replaceAll(' ', '');
+  }
 }
 
 class AshaSyncException implements Exception {
@@ -467,6 +569,15 @@ class AshaSyncException implements Exception {
 
   @override
   String toString() => message;
+}
+
+class ChwProfileNotFoundException implements Exception {
+  const ChwProfileNotFoundException(this.employeeId);
+
+  final String employeeId;
+
+  @override
+  String toString() => 'CHW profile not found for $employeeId';
 }
 
 class _VillageTrendAccumulator {

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jansetu/core/services/speech_service.dart';
@@ -76,11 +77,11 @@ class _AshaRecordingScreenState extends State<AshaRecordingScreen> {
     setState(() => _isSaving = true);
     await _stopListening();
     final payload = await _repository.buildReportPayload(transcript: _transcript);
-    await SyncQueue.queueReport(type: 'chw_report', payload: payload);
+      await SyncQueue.queueReport(type: 'chw_report', payload: payload);
     if (!mounted) return;
     setState(() => _isSaving = false);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Report saved to sync queue.')),
+      SnackBar(content: Text('ashaRecordingSaved'.tr())),
     );
     Navigator.of(context).pop();
   }
@@ -104,22 +105,24 @@ class _AshaRecordingScreenState extends State<AshaRecordingScreen> {
     final hasUrgentFlag = tags.contains('Breathlessness');
 
     return AshaScaffold(
-      title: 'Recording...',
-      subtitle: _isListening ? 'Microphone active - live transcript' : 'Tap retake to start again',
+      title: 'ashaRecordingTitle'.tr(),
+      subtitle: _isListening
+          ? 'ashaRecordingSubtitleLive'.tr()
+          : 'ashaRecordingSubtitleRetry'.tr(),
       activeTab: AshaTab.home,
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Wrap(
+            Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                _LanguageChip(label: 'Hindi', active: true),
-                _LanguageChip(label: 'Bhojpuri'),
-                _LanguageChip(label: 'Odia'),
-                _LanguageChip(label: 'English'),
+                _LanguageChip(
+                  label: context.locale.languageCode.toUpperCase(),
+                  active: true,
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -143,8 +146,8 @@ class _AshaRecordingScreenState extends State<AshaRecordingScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
-              'Live transcript',
+            Text(
+              'ashaRecordingLiveTranscript'.tr(),
               style: TextStyle(fontSize: 13, color: Color(0xFF6C7889)),
             ),
             const SizedBox(height: 8),
@@ -157,7 +160,7 @@ class _AshaRecordingScreenState extends State<AshaRecordingScreen> {
               ),
               child: Text(
                 _transcript.isEmpty
-                    ? 'Listening for patient details...'
+                    ? 'ashaRecordingListening'.tr()
                     : _transcript,
                 style: const TextStyle(
                   fontSize: 18,
@@ -167,8 +170,8 @@ class _AshaRecordingScreenState extends State<AshaRecordingScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Extracted (local rules)',
+            Text(
+              'ashaRecordingExtracted'.tr(),
               style: TextStyle(fontSize: 13, color: Color(0xFF6C7889)),
             ),
             const SizedBox(height: 8),
@@ -201,8 +204,8 @@ class _AshaRecordingScreenState extends State<AshaRecordingScreen> {
               ),
               child: Text(
                 hasUrgentFlag
-                    ? 'Breathlessness flag - recommend PHC referral today'
-                    : 'No urgent symptom detected yet. Keep speaking or confirm to save.',
+                    ? 'ashaRecordingUrgent'.tr()
+                    : 'ashaRecordingNoUrgent'.tr(),
                 style: TextStyle(
                   fontSize: 18,
                   height: 1.4,
@@ -233,7 +236,7 @@ class _AshaRecordingScreenState extends State<AshaRecordingScreen> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text('Retake'),
+                    child: Text('ashaRetake'.tr()),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -247,7 +250,9 @@ class _AshaRecordingScreenState extends State<AshaRecordingScreen> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: Text(_isSaving ? 'Saving...' : 'Confirm & save'),
+                    child: Text(
+                      _isSaving ? 'ashaSaving'.tr() : 'ashaConfirmSave'.tr(),
+                    ),
                   ),
                 ),
               ],

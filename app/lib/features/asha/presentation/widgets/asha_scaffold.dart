@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:jansetu/features/asha/presentation/asha_navigation.dart';
 import 'package:jansetu/features/asha/presentation/screens/asha_profile_screen.dart';
@@ -112,10 +113,10 @@ class _AshaBottomNav extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: const [
-          _NavItem(tab: AshaTab.home, icon: Icons.home_rounded, label: 'Home'),
-          _NavItem(tab: AshaTab.reports, icon: Icons.description_outlined, label: 'Reports'),
-          _NavItem(tab: AshaTab.sync, icon: Icons.sync_rounded, label: 'Sync'),
-          _NavItem(tab: AshaTab.area, icon: Icons.map_outlined, label: 'Area'),
+          _NavItem(tab: AshaTab.home, icon: Icons.home_rounded, labelKey: 'navHome'),
+          _NavItem(tab: AshaTab.reports, icon: Icons.description_outlined, labelKey: 'navReportsAsha'),
+          _NavItem(tab: AshaTab.sync, icon: Icons.sync_rounded, labelKey: 'navSyncAsha'),
+          _NavItem(tab: AshaTab.area, icon: Icons.map_outlined, labelKey: 'navAreaAsha'),
         ],
       ),
     );
@@ -126,12 +127,12 @@ class _NavItem extends StatelessWidget {
   const _NavItem({
     required this.tab,
     required this.icon,
-    required this.label,
+    required this.labelKey,
   });
 
   final AshaTab tab;
   final IconData icon;
-  final String label;
+  final String labelKey;
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +154,7 @@ class _NavItem extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              label,
+              labelKey.tr(),
               style: TextStyle(
                 color: isActive ? AshaScaffold._navActive : AshaScaffold._navInactive,
                 fontSize: 12,

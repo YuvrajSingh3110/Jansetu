@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jansetu/features/asha/data/asha_repository.dart';
@@ -68,7 +69,7 @@ class _AshaProfileScreenState extends State<AshaProfileScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FB),
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text('ashaProfileTitle'.tr()),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
@@ -143,13 +144,29 @@ class _AshaProfileScreenState extends State<AshaProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _ProfileRow(label: 'Phone', value: profile.phoneNumber),
-                _ProfileRow(label: 'Reports to', value: profile.reportingOffice),
-                _ProfileRow(label: 'Supervisor', value: profile.supervisorName),
-                _ProfileRow(label: 'Primary village', value: profile.primaryVillage),
-                _ProfileRow(label: 'Block from API', value: _apiBlock ?? '-'),
                 _ProfileRow(
-                  label: 'Synced reports count',
+                  label: 'ashaProfilePhone'.tr(),
+                  value: profile.phoneNumber,
+                ),
+                _ProfileRow(
+                  label: 'ashaProfileDistrict'.tr(),
+                  value:
+                      '${profile.districtName}${profile.districtState.isEmpty ? '' : ', ${profile.districtState}'}',
+                ),
+                _ProfileRow(
+                  label: 'ashaProfileBlock'.tr(),
+                  value: profile.blockName.isEmpty ? (_apiBlock ?? '-') : profile.blockName,
+                ),
+                _ProfileRow(
+                  label: 'ashaProfileVillage'.tr(),
+                  value: profile.primaryVillage,
+                ),
+                _ProfileRow(
+                  label: 'ashaProfileApiBlock'.tr(),
+                  value: _apiBlock ?? '-',
+                ),
+                _ProfileRow(
+                  label: 'ashaProfileSyncedReports'.tr(),
                   value: _reportsCount?.toString() ?? '-',
                 ),
               ],

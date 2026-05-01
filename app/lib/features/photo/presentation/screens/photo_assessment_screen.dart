@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jansetu/core/services/photo_assessment_service.dart';
@@ -130,7 +131,9 @@ class _PhotoAssessmentScreenState extends State<PhotoAssessmentScreen> {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            _isCapturing ? 'Opening camera...' : 'Take or capture photo',
+                            _isCapturing
+                                ? 'ashaPhotoOpeningCamera'.tr()
+                                : 'ashaPhotoTakeCapture'.tr(),
                             style: const TextStyle(
                               fontSize: 18,
                               color: Color(0xFF697587),
@@ -155,7 +158,7 @@ class _PhotoAssessmentScreenState extends State<PhotoAssessmentScreen> {
               titleColor: const Color(0xFFAA3D3D),
               child: Text(
                 result?.summary ??
-                    'Capture an image to run the shared photo assessment pipeline.',
+                    'ashaPhotoCapturePrompt'.tr(),
                 style: const TextStyle(
                   fontSize: 18,
                   height: 1.45,
@@ -170,7 +173,7 @@ class _PhotoAssessmentScreenState extends State<PhotoAssessmentScreen> {
               titleColor: const Color(0xFF7A5B00),
               child: Text(
                 result == null
-                    ? 'The same capture and assessment logic is shared across village and ASHA flows.'
+                    ? 'ashaPhotoSharedPipeline'.tr()
                     : '${result.primaryFinding}\n${result.recommendation}\n${result.extraNote}',
                 style: const TextStyle(
                   fontSize: 18,
@@ -193,7 +196,11 @@ class _PhotoAssessmentScreenState extends State<PhotoAssessmentScreen> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: Text(_savedImagePath == null ? 'Open camera' : 'Retake'),
+                    child: Text(
+                      _savedImagePath == null
+                          ? 'ashaPhotoOpenCamera'.tr()
+                          : 'ashaRetake'.tr(),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),

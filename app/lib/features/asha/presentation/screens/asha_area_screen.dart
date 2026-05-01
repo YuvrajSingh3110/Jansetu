@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:jansetu/features/asha/data/asha_models.dart';
@@ -52,8 +53,8 @@ class _AshaAreaScreenState extends State<AshaAreaScreen> {
   @override
   Widget build(BuildContext context) {
     return AshaScaffold(
-      title: 'Area overview',
-      subtitle: 'Catchment clusters - offline cache',
+      title: 'ashaAreaTitle'.tr(),
+      subtitle: 'ashaAreaSubtitle'.tr(),
       activeTab: AshaTab.area,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -71,21 +72,21 @@ class _AshaAreaScreenState extends State<AshaAreaScreen> {
                     ),
                     const SizedBox(height: 14),
                     _AreaMetric(
-                      title: 'Households visited',
+                      title: 'ashaAreaHouseholdsVisited'.tr(),
                       value: '${_trends.fold<int>(0, (sum, trend) => sum + trend.totalCases)}',
                       color: const Color(0xFFE3F2E9),
                       valueColor: const Color(0xFF1E8A65),
                     ),
                     const SizedBox(height: 12),
                     _AreaMetric(
-                      title: 'Follow-ups due',
+                      title: 'ashaAreaFollowUpsDue'.tr(),
                       value: '${_trends.fold<int>(0, (sum, trend) => sum + trend.pendingCases)}',
                       color: const Color(0xFFF9EACA),
                       valueColor: const Color(0xFF9C6A00),
                     ),
                     const SizedBox(height: 12),
                     _AreaMetric(
-                      title: 'Escalations',
+                      title: 'ashaAreaEscalations'.tr(),
                       value: '${_trends.where((trend) => trend.topSymptomCount >= 2).length}',
                       color: const Color(0xFFFCE7E7),
                       valueColor: const Color(0xFFB14040),
@@ -110,8 +111,9 @@ class _AreaIntroCard extends StatelessWidget {
     final hottestTrend = trends.isEmpty ? null : trends.first;
     final headline = hottestTrend != null
         ? '${_prettySymptom(hottestTrend.topSymptom)} is increasing in ${hottestTrend.villageName} (${hottestTrend.topSymptomCount} cases, ${hottestTrend.totalCases} total reports).'
+        // ignore: lines_longer_than_80_chars
         : alerts.isEmpty
-            ? 'No active outbreak clusters cached yet.'
+            ? 'ashaAreaNoClusters'.tr()
             : alerts.first.description;
 
     return Container(
@@ -130,8 +132,8 @@ class _AreaIntroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Cluster focus',
+          Text(
+            'ashaAreaClusterFocus'.tr(),
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
@@ -280,8 +282,8 @@ class _ClusterMapCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          const Text(
-            'OpenStreetMap cluster view',
+          Text(
+            'ashaAreaMapCaption'.tr(),
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -291,8 +293,8 @@ class _ClusterMapCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             alerts.isEmpty
-                ? 'No alert line is drawn until sync fetches active outbreak alerts.'
-                : 'Highlighted villages are part of the latest alert cluster.',
+                ? 'ashaAreaNoAlertLine'.tr()
+                : 'ashaAreaHighlightedVillages'.tr(),
             style: const TextStyle(
               fontSize: 14,
               color: Color(0xFF4B5A70),
