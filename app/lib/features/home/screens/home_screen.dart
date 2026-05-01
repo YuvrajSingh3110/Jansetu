@@ -29,7 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchLocation() async {
-    final location = await LocationService().getCurrentLocality(fallback: 'Village');
+    final location = await LocationService().getCurrentLocality(
+      fallback: 'Village',
+    );
     if (mounted) {
       setState(() {
         _villageName = location;
@@ -77,21 +79,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 24),
                 Row(
                   children: [
-                    Expanded(child: _buildActionCard(
-                      icon: Icons.camera_alt,
-                      iconColor: Colors.black87,
-                      title: 'photoCheckTitle'.tr(),
-                      subtitle: 'photoCheckSubtitle'.tr(),
-                      onTap: _openPhotoCheck,
-                    )),
+                    Expanded(
+                      child: _buildActionCard(
+                        icon: Icons.camera_alt,
+                        iconColor: Colors.black87,
+                        title: 'photoCheckTitle'.tr(),
+                        subtitle: 'photoCheckSubtitle'.tr(),
+                        onTap: _openPhotoCheck,
+                      ),
+                    ),
                     const SizedBox(width: 16),
-                    Expanded(child: _buildActionCard(
-                      icon: Icons.medication,
-                      iconColor: Colors.amber.shade700,
-                      title: 'medicinesTitle'.tr(),
-                      subtitle: 'medicinesSubtitle'.tr(),
-                      onTap: () {},
-                    )),
+                    Expanded(
+                      child: _buildActionCard(
+                        icon: Icons.medication,
+                        iconColor: Colors.amber.shade700,
+                        title: 'medicinesTitle'.tr(),
+                        subtitle: 'medicinesSubtitle'.tr(),
+                        onTap: () {},
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 32),
@@ -107,9 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      decoration: const BoxDecoration(
-        gradient: AppColors.headerGradient,
-      ),
+      decoration: const BoxDecoration(gradient: AppColors.headerGradient),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -130,10 +134,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildAlertBox() {
     return InkWell(
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const AlertDetailScreen()),
-        );
-      },      borderRadius: BorderRadius.circular(4),
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const AlertDetailScreen()));
+      },
+      borderRadius: BorderRadius.circular(4),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
@@ -148,7 +153,11 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.warning_amber_rounded, color: Color(0xFFD32F2F), size: 20),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Color(0xFFD32F2F),
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -177,7 +186,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   void _startMicRecording() {
     showModalBottomSheet(
       context: context,
@@ -191,7 +199,9 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       if (finalText != null && finalText is String && finalText.isNotEmpty) {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => ChatScreen(initialPrompt: finalText)),
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(initialPrompt: finalText),
+          ),
         );
       }
     });
@@ -218,11 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: AppColors.primary,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.mic,
-                color: Colors.white,
-                size: 48,
-              ),
+              child: const Icon(Icons.mic, color: Colors.white, size: 48),
             ),
             const SizedBox(height: 24),
             Text(
@@ -306,9 +312,7 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Colors.white,
         border: Border(top: BorderSide(color: AppColors.borderLight)),
       ),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).padding.bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
@@ -335,7 +339,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildNavItem({required IconData icon, required String label, bool isActive = false, VoidCallback? onTap}) {
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    bool isActive = false,
+    VoidCallback? onTap,
+  }) {
     return InkWell(
       onTap: onTap ?? () {},
       child: Padding(
@@ -382,10 +391,12 @@ class _ListeningBottomSheetState extends State<_ListeningBottomSheet> {
   }
 
   Future<void> _startListening() async {
-    final langCode = context.read<OnboardingBloc>().state.selectedLanguage?.localeCode ?? 'hi';
+    final langCode =
+        context.read<OnboardingBloc>().state.selectedLanguage?.localeCode ??
+        'hi';
     await _speechService.startListening(
       localeId: langCode,
-      onResult: (text) {
+      onResult: (text, _) {
         if (mounted) {
           setState(() {
             _currentText = text;
@@ -414,12 +425,20 @@ class _ListeningBottomSheetState extends State<_ListeningBottomSheet> {
         children: [
           const Text(
             'Listening...',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primaryDark,
+            ),
           ),
           const SizedBox(height: 16),
           Text(
             _currentText.isEmpty ? 'Speak now...' : _currentText,
-            style: const TextStyle(fontSize: 16, color: AppColors.textSecondary, fontStyle: FontStyle.italic),
+            style: const TextStyle(
+              fontSize: 16,
+              color: AppColors.textSecondary,
+              fontStyle: FontStyle.italic,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
@@ -432,14 +451,21 @@ class _ListeningBottomSheetState extends State<_ListeningBottomSheet> {
                 color: Colors.redAccent,
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(color: Colors.redAccent.withValues(alpha: 0.4), blurRadius: 10, spreadRadius: 4)
+                  BoxShadow(
+                    color: Colors.redAccent.withValues(alpha: 0.4),
+                    blurRadius: 10,
+                    spreadRadius: 4,
+                  ),
                 ],
               ),
               child: const Icon(Icons.stop, color: Colors.white, size: 40),
             ),
           ),
           const SizedBox(height: 16),
-          const Text('Tap to stop', style: TextStyle(color: AppColors.textMuted)),
+          const Text(
+            'Tap to stop',
+            style: TextStyle(color: AppColors.textMuted),
+          ),
         ],
       ),
     );

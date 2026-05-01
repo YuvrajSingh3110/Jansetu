@@ -8,9 +8,10 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
   final OnboardingRepositoryInterface _repository;
 
   OnboardingBloc({required OnboardingRepositoryInterface repository})
-      : _repository = repository,
-        super(const OnboardingState()) {
+    : _repository = repository,
+      super(const OnboardingState()) {
     on<OnboardingStatusChecked>(_onStatusChecked);
+    on<OnboardingResetRequested>(_onResetRequested);
     on<LanguageSelected>(_onLanguageSelected);
     on<LanguageContinuePressed>(_onLanguageContinue);
     on<RoleSelected>(_onRoleSelected);
@@ -32,22 +33,33 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
         final savedRole = await _repository.getSavedUserRole();
         final savedGender = await _repository.getSavedGender();
         final savedAge = await _repository.getSavedAge();
-        emit(state.copyWith(
-          status: OnboardingStatus.completed,
-          selectedLanguage: savedLanguage,
-          selectedRole: savedRole,
-          selectedGender: savedGender,
-          selectedAge: savedAge,
-        ));
+        emit(
+          state.copyWith(
+            status: OnboardingStatus.completed,
+            selectedLanguage: savedLanguage,
+            selectedRole: savedRole,
+            selectedGender: savedGender,
+            selectedAge: savedAge,
+          ),
+        );
       } else {
-        emit(state.copyWith(status: OnboardingStatus.languageSelect));
+        emit(const OnboardingState(status: OnboardingStatus.languageSelect));
       }
     } catch (e) {
-      emit(state.copyWith(
-        status: OnboardingStatus.languageSelect,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        OnboardingState(
+          status: OnboardingStatus.languageSelect,
+          errorMessage: e.toString(),
+        ),
+      );
     }
+  }
+
+  void _onResetRequested(
+    OnboardingResetRequested event,
+    Emitter<OnboardingState> emit,
+  ) {
+    emit(const OnboardingState(status: OnboardingStatus.languageSelect));
   }
 
   /// User tapped a language card.
@@ -68,18 +80,17 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       await _repository.saveLanguage(state.selectedLanguage!);
       emit(state.copyWith(status: OnboardingStatus.roleSelect));
     } catch (e) {
-      emit(state.copyWith(
-        status: OnboardingStatus.error,
-        errorMessage: 'Failed to save language: $e',
-      ));
+      emit(
+        state.copyWith(
+          status: OnboardingStatus.error,
+          errorMessage: 'Failed to save language: $e',
+        ),
+      );
     }
   }
 
   /// User tapped a role card.
-  void _onRoleSelected(
-    RoleSelected event,
-    Emitter<OnboardingState> emit,
-  ) {
+  void _onRoleSelected(RoleSelected event, Emitter<OnboardingState> emit) {
     emit(state.copyWith(selectedRole: event.role));
   }
 
@@ -99,10 +110,12 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
         emit(state.copyWith(status: OnboardingStatus.completed));
       }
     } catch (e) {
-      emit(state.copyWith(
-        status: OnboardingStatus.error,
-        errorMessage: 'Failed to save role: $e',
-      ));
+      emit(
+        state.copyWith(
+          status: OnboardingStatus.error,
+          errorMessage: 'Failed to save role: $e',
+        ),
+      );
     }
   }
 
@@ -126,10 +139,12 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       await _repository.completeOnboarding();
       emit(state.copyWith(status: OnboardingStatus.completed));
     } catch (e) {
-      emit(state.copyWith(
-        status: OnboardingStatus.error,
-        errorMessage: 'Failed to complete onboarding: $e',
-      ));
+      emit(
+        state.copyWith(
+          status: OnboardingStatus.error,
+          errorMessage: 'Failed to complete onboarding: $e',
+        ),
+      );
     }
   }
 }

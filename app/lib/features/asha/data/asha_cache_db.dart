@@ -220,4 +220,14 @@ CREATE TABLE alerts (
         )
         .toList();
   }
+
+  Future<void> clearAll() async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('meta');
+      await txn.delete('blocks');
+      await txn.delete('villages');
+      await txn.delete('alerts');
+    });
+  }
 }

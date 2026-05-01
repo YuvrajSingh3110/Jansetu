@@ -67,3 +67,9 @@ class OnboardingCompleted extends OnboardingEvent {
 class OnboardingStatusChecked extends OnboardingEvent {
   const OnboardingStatusChecked();
 }
+
+/// Clears any saved onboarding selection from bloc memory and returns to the
+/// first onboarding step. Storage clearing happens outside the bloc.
+class OnboardingResetRequested extends OnboardingEvent {
+  const OnboardingResetRequested();
+}

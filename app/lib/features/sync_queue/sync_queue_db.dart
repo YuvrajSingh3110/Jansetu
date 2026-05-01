@@ -140,4 +140,9 @@ CREATE TABLE IF NOT EXISTS reports (
     final db = await instance.database;
     await db.delete('reports', where: 'status = ?', whereArgs: ['SENT']);
   }
+
+  Future<void> clearAllReports() async {
+    final db = await instance.database;
+    await db.delete('reports');
+  }
 }

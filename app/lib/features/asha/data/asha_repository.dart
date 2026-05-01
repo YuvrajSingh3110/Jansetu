@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:http/http.dart' as http;
 import 'package:jansetu/features/asha/data/asha_cache_db.dart';
@@ -244,6 +245,30 @@ class AshaRepository {
       clockDriftWarning: driftMinutes > 5
           ? 'Device time differs from server by more than 5 minutes.'
           : null,
+    );
+  }
+
+  Future<AshaReportsHistoryData> loadReportsHistory({
+    bool preferNetwork = true,
+  }) async {
+    ChwProfile? profile;
+    try {
+      profile = await getActiveProfile(preferNetwork: preferNetwork);
+    } catch (_) {
+      profile = await loadCachedProfile();
+    }
+
+    final reports = await _queueDb.getAllReports();
+    final items = reports
+        .map(_mapReportHistoryItem)
+        .whereType<AshaReportHistoryItem>()
+        .toList();
+    final pendingCount = items.where((item) => !item.isSent).length;
+    final syncedCount = profile?.reportsCount ?? 0;
+
+    return AshaReportsHistoryData(
+      totalCount: math.max(items.length, syncedCount + pendingCount),
+      items: items,
     );
   }
 
@@ -556,6 +581,48 @@ class AshaRepository {
     final cleaned = (raw ?? '').trim().toUpperCase();
     return cleaned.replaceAll(' ', '');
   }
+
+  AshaReportHistoryItem? _mapReportHistoryItem(Map<String, dynamic> row) {
+    final payloadRaw = row['payload']?.toString();
+    if (payloadRaw == null || payloadRaw.isEmpty) {
+      return null;
+    }
+
+    Map<String, dynamic> payload;
+    try {
+      final decoded = jsonDecode(payloadRaw);
+      if (decoded is! Map<String, dynamic>) {
+        return null;
+      }
+      payload = decoded;
+    } catch (_) {
+      return null;
+    }
+
+    final symptoms = ((payload['symptoms'] as List?) ?? const [])
+        .map((item) => item.toString())
+        .where((item) => item.trim().isNotEmpty)
+        .toList();
+    final status = row['status']?.toString() ?? 'PENDING';
+    final gender = payload['gender']?.toString() ?? '';
+    final ageGroup = payload['ageGroup']?.toString() ?? '';
+    final villageName = payload['villageName']?.toString().trim().isNotEmpty == true
+        ? payload['villageName']!.toString()
+        : payload['villageId']?.toString() ?? '';
+    final payloadSize = (row['payload_size'] as num?)?.toInt() ?? 0;
+    final timestamp = DateTime.tryParse(row['timestamp']?.toString() ?? '');
+
+    return AshaReportHistoryItem(
+      genderCode: gender,
+      ageGroup: ageGroup,
+      symptoms: symptoms,
+      villageName: villageName,
+      timestamp: timestamp,
+      status: status,
+      payloadSize: payloadSize,
+      needsReferral: payload['referral'] == true,
+    );
+  }
 }
 
 class AshaSyncException implements Exception {
@@ -588,4 +655,38 @@ class _VillageTrendAccumulator {
   int pendingCases = 0;
   int sentCases = 0;
   final Map<String, int> symptomCounts = <String, int>{};
+}
+
+class AshaReportsHistoryData {
+  const AshaReportsHistoryData({
+    required this.totalCount,
+    required this.items,
+  });
+
+  final int totalCount;
+  final List<AshaReportHistoryItem> items;
+}
+
+class AshaReportHistoryItem {
+  const AshaReportHistoryItem({
+    required this.genderCode,
+    required this.ageGroup,
+    required this.symptoms,
+    required this.villageName,
+    required this.timestamp,
+    required this.status,
+    required this.payloadSize,
+    required this.needsReferral,
+  });
+
+  final String genderCode;
+  final String ageGroup;
+  final List<String> symptoms;
+  final String villageName;
+  final DateTime? timestamp;
+  final String status;
+  final int payloadSize;
+  final bool needsReferral;
+
+  bool get isSent => status == 'SENT';
 }

@@ -125,4 +125,8 @@ class AshaWorkerProfileRepository {
     if (current == null) return;
     await saveProfile(current.copyWith(profileImagePath: imagePath));
   }
+
+  Future<void> clearProfile() async {
+    await _storage.writeAshaWorkerProfile('');
+  }
 }

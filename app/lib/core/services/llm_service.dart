@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:io';
+
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -8,13 +10,23 @@ class LlmService {
   static final LlmService _instance = LlmService._internal();
   factory LlmService() => _instance;
 
-  bool _isInitialized = false;
+  static const String preferredModelPath =
+      '/storage/emulated/0/Download/gemma-4-E2B-it.litertlm';
+  static const List<String> _candidateModelPaths = [
+    preferredModelPath,
+    '/sdcard/Download/gemma-4-E2B-it.litertlm',
+    '/storage/emulated/0/Android/data/com.example.jansetu/files/models/gemma-4-E2B-it.litertlm',
+    '/sdcard/Android/data/com.example.jansetu/files/models/gemma-4-E2B-it.litertlm',
+  ];
+
+  bool _runtimeInitialized = false;
+  bool _modelReady = false;
   InferenceModel? _model;
   InferenceChat? _chat;
   bool _chatSupportsImages = false;
+  String? _activeModelPath;
+  String? _lastInitializationIssue;
 
-  static const _modelPath =
-      '/storage/emulated/0/Download/gemma-4-E2B-it.litertlm';
   static const String _jansetuInstruction = '''
 You are Jansetu's on-device epidemiological extraction model.
 You convert community health worker or villager speech transcripts into compact disease-surveillance signals.
@@ -27,69 +39,48 @@ Return plain text only.
 If the input is unclear, say what is uncertain briefly instead of inventing details.
 ''';
 
-  Future<bool> _requestStoragePermission() async {
-    // Android 13+ uses granular media permissions
-    // Android 10-12 uses READ_EXTERNAL_STORAGE
-    PermissionStatus status;
+  String? get lastInitializationIssue => _lastInitializationIssue;
+  String? get activeModelPath => _activeModelPath;
 
+  Future<bool> _requestStoragePermission() async {
     if (await Permission.manageExternalStorage.isGranted) {
       return true;
     }
 
-    // Try READ_EXTERNAL_STORAGE first (covers Android 10-12)
-    status = await Permission.storage.request();
-    if (status.isGranted) return true;
+    final storageStatus = await Permission.storage.request();
+    if (storageStatus.isGranted) {
+      return true;
+    }
 
-    // On Android 13+, storage permission is always denied — that's expected.
-    // The Downloads folder is readable via MediaStore or direct path after
-    // granting manageExternalStorage. Request it as fallback.
-    status = await Permission.manageExternalStorage.request();
-    return status.isGranted;
+    final manageStatus = await Permission.manageExternalStorage.request();
+    return manageStatus.isGranted;
   }
 
-  Future<void> initialize() async {
-    if (_isInitialized) return;
-
-    try {
-      await FlutterGemma.initialize();
-
-      if (!FlutterGemma.hasActiveModel()) {
-        // Request storage permission before accessing the file
-        final hasPermission = await _requestStoragePermission();
-        if (!hasPermission) {
-          developer.log(
-            'Storage permission denied — cannot load model from Downloads.',
-            name: 'LlmService',
-          );
-          _isInitialized = true;
-          return;
-        }
-
-        developer.log('Loading model from: $_modelPath', name: 'LlmService');
-
-        await FlutterGemma.installModel(
-          modelType: ModelType.gemmaIt,
-          fileType: ModelFileType.task,
-        ).fromFile(_modelPath).install();
+  Future<String?> resolveModelPath() async {
+    for (final candidate in _candidateModelPaths) {
+      final file = File(candidate);
+      if (await file.exists()) {
+        return candidate;
       }
-
-      _isInitialized = true;
-      developer.log('FlutterGemma initialized.', name: 'LlmService');
-    } catch (e) {
-      developer.log('Failed to initialize: $e', name: 'LlmService');
-      _isInitialized = true;
     }
+    return null;
   }
 
-  Future<void> _ensureChat({required bool supportImage}) async {
-    if (!_isInitialized) {
-      await initialize();
+  Future<String?> _getRegisteredActiveModelPath() async {
+    final activeSpec =
+        FlutterGemmaPlugin.instance.modelManager.activeInferenceModel;
+    if (activeSpec == null) {
+      return null;
     }
-
-    if (_chat != null && _model != null && _chatSupportsImages == supportImage) {
-      return;
+    final filePaths = await FlutterGemmaPlugin.instance.modelManager
+        .getModelFilePaths(activeSpec);
+    if (filePaths == null || filePaths.isEmpty) {
+      return null;
     }
+    return filePaths.values.first;
+  }
 
+  Future<void> _disposeSession() async {
     if (_chat != null) {
       await _chat!.clearHistory();
       _chat = null;
@@ -100,25 +91,88 @@ If the input is unclear, say what is uncertain briefly instead of inventing deta
       _model = null;
     }
 
+    _chatSupportsImages = false;
+  }
+
+  Future<void> initialize({bool forceReload = false}) async {
+    if (_modelReady && !forceReload) {
+      return;
+    }
+
+    if (!_runtimeInitialized) {
+      await FlutterGemma.initialize();
+      _runtimeInitialized = true;
+    }
+
+    final hasPermission = await _requestStoragePermission();
+    if (!hasPermission) {
+      _lastInitializationIssue =
+          'Storage permission denied. JanSetu cannot read the Gemma model in Downloads.';
+      throw StateError(_lastInitializationIssue!);
+    }
+
+    final resolvedPath = await resolveModelPath();
+    if (resolvedPath == null) {
+      _lastInitializationIssue =
+          'Gemma model not found. Expected it at $preferredModelPath.';
+      throw StateError(_lastInitializationIssue!);
+    }
+
+    final registeredActivePath = await _getRegisteredActiveModelPath();
+    final needsReinstall =
+        forceReload ||
+        !_modelReady ||
+        !FlutterGemma.hasActiveModel() ||
+        registeredActivePath != resolvedPath;
+
+    if (needsReinstall) {
+      developer.log(
+        'Activating Gemma model from $resolvedPath (previous active: ${registeredActivePath ?? 'none'})',
+        name: 'LlmService',
+      );
+      await _disposeSession();
+      await FlutterGemma.installModel(
+        modelType: ModelType.gemmaIt,
+        fileType: ModelFileType.task,
+      ).fromFile(resolvedPath).install();
+    } else {
+      developer.log(
+        'Reusing active Gemma model at $resolvedPath',
+        name: 'LlmService',
+      );
+    }
+
+    _activeModelPath = resolvedPath;
+    _lastInitializationIssue = null;
+    _modelReady = true;
+  }
+
+  Future<void> _ensureChat({required bool supportImage}) async {
+    await initialize();
+
+    if (_chat != null &&
+        _model != null &&
+        _chatSupportsImages == supportImage) {
+      return;
+    }
+
+    await _disposeSession();
+
     _model = await FlutterGemma.getActiveModel(
       maxTokens: 1024,
       supportImage: supportImage,
       maxNumImages: supportImage ? 1 : null,
     );
-    _chat = await _model!.createChat(
-      supportImage: supportImage,
-    );
+    _chat = await _model!.createChat(supportImage: supportImage);
     _chatSupportsImages = supportImage;
 
     developer.log(
-      'Created Gemma chat session. supportImage=$supportImage',
+      'Created Gemma chat session. supportImage=$supportImage path=$_activeModelPath',
       name: 'LlmService',
     );
   }
 
   Stream<String> getResponseStream(Message prompt) async* {
-    if (!_isInitialized) await initialize();
-
     try {
       final requiresImage = prompt.hasImage;
       await _ensureChat(supportImage: requiresImage);
@@ -131,7 +185,8 @@ If the input is unclear, say what is uncertain briefly instead of inventing deta
         );
 
         if (!processed.success || processed.processedImage == null) {
-          final msg = processed.error?.message ??
+          final msg =
+              processed.error?.message ??
               'The selected image could not be prepared for the model.';
           for (final word in msg.split(' ')) {
             await Future.delayed(const Duration(milliseconds: 40));
@@ -158,12 +213,7 @@ If the input is unclear, say what is uncertain briefly instead of inventing deta
       }
 
       if (_chat == null) {
-        const msg = 'Model session could not be created.';
-        for (final word in msg.split(' ')) {
-          await Future.delayed(const Duration(milliseconds: 40));
-          yield '$word ';
-        }
-        return;
+        throw StateError('Model session could not be created.');
       }
 
       await _chat!.addQuery(finalPrompt);
@@ -172,7 +222,6 @@ If the input is unclear, say what is uncertain briefly instead of inventing deta
           yield response.token;
         }
       }
-      return;
     } catch (error, stackTrace) {
       developer.log(
         'Multimodal/text inference failed: $error',
@@ -180,8 +229,9 @@ If the input is unclear, say what is uncertain briefly instead of inventing deta
         stackTrace: stackTrace,
       );
       final fallback = prompt.hasImage
-          ? 'Image processing failed in the current Gemma session. The model may support images, but this app could not open a stable multimodal session for that photo.'
-          : 'The model session failed while generating a response.';
+          ? 'Image processing failed in the current Gemma session. ${_lastInitializationIssue ?? 'Try retaking the image with clearer lighting.'}'
+          : _lastInitializationIssue ??
+                'The model session failed while generating a response.';
       for (final word in fallback.split(' ')) {
         await Future.delayed(const Duration(milliseconds: 40));
         yield '$word ';
@@ -198,90 +248,3 @@ If the input is unclear, say what is uncertain briefly instead of inventing deta
     return '$_jansetuInstruction\n\nUser input:\n$cleanedPrompt';
   }
 }
-
-// import 'dart:async';
-// import 'dart:developer' as developer;
-// import 'package:flutter_gemma/flutter_gemma.dart';
-//
-// class LlmService {
-//   LlmService._internal();
-//   static final LlmService _instance = LlmService._internal();
-//   factory LlmService() => _instance;
-//
-//   bool _isInitialized = false;
-//   // ignore: unused_field
-//   InferenceModel? _model;
-//   InferenceChat? _chat;
-//
-//   /// Initializes the Gemma LLM instance.
-//   /// If the model file is not found, it gracefully falls back to mock mode
-//   /// so the POC UI can still function.
-//   Future<void> initialize() async {
-//     if (_isInitialized) return;
-//
-//     try {
-//       // ---------------------------------------------------------
-//       // TO INTEGRATE YOUR DOWNLOADED MODEL, UNCOMMENT THIS BLOCK:
-//       // ---------------------------------------------------------
-//       //
-//       // 1. Initialize the plugin
-//       await FlutterGemma.initialize();
-//
-//       // 2. Install the model from your assets if not already active
-//       if (!FlutterGemma.hasActiveModel()) {
-//         await FlutterGemma.installModel(
-//           modelType: ModelType.gemmaIt,
-//         ).fromAsset('assets/models/gemma-4-E2B-it.litertlm').install();
-//       }
-//
-//       // 3. Get the active model instance for chatting
-//       _model = await FlutterGemma.getActiveModel(maxTokens: 1024);
-//       // Create the chat session once and reuse it
-//       _chat = await _model!.createChat(
-//         fileType: ModelFileType.task, // covers .litertlm
-//       );
-//       _isInitialized = true;
-//       return;
-//       // ---------------------------------------------------------
-//
-//       developer.log(
-//         'Falling back to Mock LLM Mode for POC.',
-//         name: 'LlmService',
-//       );
-//       _isInitialized = true;
-//     } catch (e) {
-//       developer.log(
-//         'Failed to initialize FlutterGemma: $e',
-//         name: 'LlmService',
-//       );
-//       _isInitialized = true;
-//     }
-//   }
-//
-//   /// Sends a prompt to the LLM and streams the response back.
-//   Stream<String> getResponseStream(String prompt) async* {
-//     if (!_isInitialized) {
-//       await initialize();
-//     }
-//
-//     // ---------------------------------------------------------
-//     // TO USE THE REAL MODEL STREAM, UNCOMMENT THIS BLOCK:
-//     // ---------------------------------------------------------
-//     if (_model != null) {
-//       final chat = await _model!.createChat();
-//       yield* chat.sendMessageStream(prompt);
-//       return;
-//     }
-//     // ---------------------------------------------------------
-//
-//     // Yield a simulated mock response word by word
-//     final mockResponse =
-//         'Mock LLM Response: I received your prompt - "$prompt". Once the actual Gemma model file is added, this will be a real response.';
-//     final mockWords = mockResponse.split(' ');
-//
-//     for (final word in mockWords) {
-//       await Future.delayed(const Duration(milliseconds: 100));
-//       yield '$word ';
-//     }
-//   }
-// }

@@ -39,10 +39,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     return super.close();
   }
 
-  void _onToggleSpeechMute(
-    ToggleSpeechMute event,
-    Emitter<ChatState> emit,
-  ) {
+  void _onToggleSpeechMute(ToggleSpeechMute event, Emitter<ChatState> emit) {
     final newMuteState = !state.isSpeechMuted;
     _ttsService.setMuted(newMuteState);
     emit(state.copyWith(isSpeechMuted: newMuteState));
@@ -73,21 +70,22 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       isComplete: false,
     );
 
-    emit(state.copyWith(
-      messages: List.from(state.messages)..add(userMsg)..add(initialAiMsg),
-      clearSelectedImage: true,
-    ));
+    emit(
+      state.copyWith(
+        messages: List.from(state.messages)
+          ..add(userMsg)
+          ..add(initialAiMsg),
+        clearSelectedImage: true,
+      ),
+    );
 
     final message = imageBytes != null
         ? Message.withImage(
-      text: trimmedText,
-      imageBytes: imageBytes,
-      isUser: true,
-    )
-        : Message.text(
-      text: trimmedText,
-      isUser: true,
-    );
+            text: trimmedText,
+            imageBytes: imageBytes,
+            isUser: true,
+          )
+        : Message.text(text: trimmedText, isUser: true);
 
     try {
       final stream = _llmService.getResponseStream(message);
@@ -99,20 +97,25 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       }
 
       if (!isClosed) {
-        add(IncomingStreamChunk(
-          messageId: aiMsgId,
-          chunkText: '',
-          isComplete: true,
-        ));
+        add(
+          IncomingStreamChunk(
+            messageId: aiMsgId,
+            chunkText: '',
+            isComplete: true,
+          ),
+        );
       }
     } catch (error) {
       if (!isClosed) {
-        add(IncomingStreamChunk(
-          messageId: aiMsgId,
-          chunkText:
-          'Unable to process this image right now. Please try another photo or restart the model.\n\n$error',
-          isComplete: true,
-        ));      }
+        add(
+          IncomingStreamChunk(
+            messageId: aiMsgId,
+            chunkText:
+                'Unable to process this image right now. Please try another photo or restart the model.\n\n$error',
+            isComplete: true,
+          ),
+        );
+      }
     }
   }
 
@@ -150,19 +153,21 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   void _onImageAttachmentSelected(
-      ImageAttachmentSelected event,
-      Emitter<ChatState> emit,
-      ) {
-    emit(state.copyWith(
-      selectedImageBytes: event.imageBytes,
-      selectedImageName: event.imageName,
-    ));
+    ImageAttachmentSelected event,
+    Emitter<ChatState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        selectedImageBytes: event.imageBytes,
+        selectedImageName: event.imageName,
+      ),
+    );
   }
 
   void _onImageAttachmentCleared(
-      ImageAttachmentCleared event,
-      Emitter<ChatState> emit,
-      ) {
+    ImageAttachmentCleared event,
+    Emitter<ChatState> emit,
+  ) {
     emit(state.copyWith(clearSelectedImage: true));
   }
 
@@ -171,10 +176,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     Emitter<ChatState> emit,
   ) async {
     emit(state.copyWith(isListening: true, currentVoiceInput: ''));
-    
+
     await _speechService.startListening(
       localeId: event.localeCode,
-      onResult: (text) {
+      onResult: (text, _) {
         if (!isClosed) {
           add(VoiceInputUpdated(text));
         }
@@ -182,10 +187,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     );
   }
 
-  void _onVoiceInputUpdated(
-    VoiceInputUpdated event,
-    Emitter<ChatState> emit,
-  ) {
+  void _onVoiceInputUpdated(VoiceInputUpdated event, Emitter<ChatState> emit) {
     emit(state.copyWith(currentVoiceInput: event.recognizedWords));
   }
 
@@ -194,7 +196,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     Emitter<ChatState> emit,
   ) async {
     await _speechService.stopListening();
-    
+
     final finalVoiceInput = state.currentVoiceInput;
     emit(state.copyWith(isListening: false, currentVoiceInput: ''));
 
