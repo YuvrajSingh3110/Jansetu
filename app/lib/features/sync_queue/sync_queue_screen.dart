@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -242,13 +242,7 @@ class _QueueListItem {
           jsonDecode(row['payload']?.toString() ?? '{}') as Map<String, dynamic>;
     } catch (_) {}
 
-    final gender = payload['gender']?.toString() ?? 'U';
-    final ageGroup = payload['ageGroup']?.toString() ?? 'adult';
-    final ageLabel = switch (ageGroup) {
-      'child' => 'Child',
-      'elderly' => '60+',
-      _ => 'Adult',
-    };
+    final gender = _normalizeGender(payload['gender']?.toString());
     final symptoms = ((payload['symptoms'] as List?) ?? const [])
         .map((item) => item.toString())
         .toList();
@@ -265,13 +259,24 @@ class _QueueListItem {
         timestamp == null ? 'Unknown' : _formatTimestamp(timestamp.toLocal());
 
     return _QueueListItem(
-      title: '$gender/$ageLabel · $symptomLabel',
+      title: gender == null ? symptomLabel : '$gender · $symptomLabel',
       subtitle: status == 'SENT'
           ? '$timeLabel · ${'ashaSyncQueueSentShort'.tr()}'
           : '$timeLabel · ${_titleCaseVillage(village)}',
       payloadSize: (row['payload_size'] as num?)?.toInt() ?? 0,
       isSent: status == 'SENT',
     );
+  }
+}
+
+String? _normalizeGender(String? raw) {
+  switch ((raw ?? '').trim().toUpperCase()) {
+    case 'F':
+      return 'Female';
+    case 'M':
+      return 'Male';
+    default:
+      return null;
   }
 }
 
@@ -321,3 +326,4 @@ String _formatTimestamp(DateTime time) {
   final minute = time.minute.toString().padLeft(2, '0');
   return isToday ? 'Today $hour:$minute' : 'Yesterday';
 }
+

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:jansetu/core/services/llm_service.dart';
 
 class PhotoAssessmentResult {
@@ -66,7 +67,9 @@ Note: <1 short practical note>
     var extraNote = heuristic.recommendation;
 
     try {
-      final responseStream = _llmService.getResponseStream(prompt);
+      final responseStream = _llmService.getResponseStream(
+        Message.text(text: prompt, isUser: true),
+      );
       final fullResponse = await responseStream.join('');
       final summaryMatch = RegExp(r'Summary:\s*(.*)').firstMatch(fullResponse);
       final noteMatch = RegExp(r'Note:\s*(.*)').firstMatch(fullResponse);
