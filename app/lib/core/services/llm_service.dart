@@ -38,14 +38,19 @@ If the input is unclear, say what is uncertain briefly instead of inventing deta
       await FlutterGemma.initialize();
 
       if (!FlutterGemma.hasActiveModel()) {
-        final isDownloaded = await ModelDownloadService().isModelDownloaded();
+        final isDownloaded = await ModelDownloadService().isModelAvailable();
         if (!isDownloaded) {
           _isModelMissing = true;
           _isInitialized = true;
           return;
         }
 
-        final modelPath = await ModelDownloadService().getModelPath();
+        final modelPath = await ModelDownloadService().resolveModelPath();
+        if (modelPath == null) {
+          _isModelMissing = true;
+          _isInitialized = true;
+          return;
+        }
         developer.log('Loading model from: $modelPath', name: 'LlmService');
 
         await FlutterGemma.installModel(

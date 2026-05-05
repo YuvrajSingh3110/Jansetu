@@ -60,7 +60,6 @@ class _ChatScreenViewState extends State<_ChatScreenView> {
   bool _isModelMissing = false;
   String? _downloadTaskId;
   int _downloadProgress = 0;
-  int _downloadStatus = 0;
   final ReceivePort _port = ReceivePort();
 
   @override
@@ -90,13 +89,10 @@ class _ChatScreenViewState extends State<_ChatScreenView> {
 
       if (_downloadTaskId != null && id == _downloadTaskId) {
         setState(() {
-          _downloadStatus = status;
           _downloadProgress = progress;
-          // Status 3 is complete in flutter_downloader
+          // DownloadTaskStatus.complete == 3
           if (status == 3) {
             _isModelMissing = false;
-            // Force re-init of LLM service
-            context.read<ChatBloc>().add(const GenerateSessionHeader()); // dummy event or just rely on state
           }
         });
       }
@@ -109,12 +105,11 @@ class _ChatScreenViewState extends State<_ChatScreenView> {
   }
 
   Future<void> _checkModelStatus() async {
-    final downloadService = ModelDownloadService();
-    final isDownloaded = await downloadService.isModelDownloaded();
+    final isAvailable = await ModelDownloadService().isModelAvailable();
     if (mounted) {
       setState(() {
         _isCheckingModel = false;
-        _isModelMissing = !isDownloaded;
+        _isModelMissing = !isAvailable;
       });
     }
   }
