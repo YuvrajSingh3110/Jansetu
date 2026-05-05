@@ -60,6 +60,17 @@ class SecureStorageService {
     return int.tryParse(value);
   }
 
+  // ── Chat History ───────────────────────────────────────────────
+  static const String _keyChatHistory = 'jansetu_chat_history';
+
+  Future<void> writeChatHistory(String jsonValue) async {
+    await _storage.write(key: _keyChatHistory, value: jsonValue);
+  }
+
+  Future<String?> readChatHistory() async {
+    return _storage.read(key: _keyChatHistory);
+  }
+
   // ── Onboarding status ───────────────────────────────────────────
   Future<void> markOnboardingComplete() async {
     await _storage.write(key: _keyOnboardingComplete, value: 'true');

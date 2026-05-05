@@ -18,6 +18,7 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
     on<GenderSelected>(_onGenderSelected);
     on<AgeSelected>(_onAgeSelected);
     on<OnboardingCompleted>(_onCompleted);
+    on<OnboardingResetRequested>(_onResetRequested);
   }
 
   /// Check if the user already completed onboarding (app start-up).
@@ -132,4 +133,21 @@ class OnboardingBloc extends Bloc<OnboardingEvent, OnboardingState> {
       ));
     }
   }
+
+  /// User requested to reset onboarding.
+  Future<void> _onResetRequested(
+    OnboardingResetRequested event,
+    Emitter<OnboardingState> emit,
+  ) async {
+    try {
+      await _repository.clearAll();
+      emit(const OnboardingState(status: OnboardingStatus.languageSelect));
+    } catch (e) {
+      emit(state.copyWith(
+        status: OnboardingStatus.error,
+        errorMessage: 'Failed to reset onboarding: $e',
+      ));
+    }
+  }
 }
+

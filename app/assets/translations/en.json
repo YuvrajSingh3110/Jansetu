@@ -62,5 +62,10 @@
   "ageLabel": "Age",
   "privacyDisclaimer": "This data is private and won't be shared anywhere",
   "selectOne": "Select one",
-  "historySubtitle": "Your previous reports and sync status"
+  "historySubtitle": "Your previous reports and sync status",
+  "switchRole": "Switch role",
+  "noPastChats": "No past AI chats found",
+  "readOnlyInfo": "This is a read-only view of a past chat.",
+  "submitReport": "Submit Report"
 }
+

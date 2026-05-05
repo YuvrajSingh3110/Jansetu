@@ -53,5 +53,16 @@
   "alertAction3Title": "ਬੁਖਾਰ ਹੋਵੇ ਤਾਂ PHC ਜਾਓ",
   "alertAction3Body": "ਜੇ ਬੁਖਾਰ ਜਾਂ ਖੰਘ ਸ਼ੁਰੂ ਹੋਵੇ ਤਾਂ PHC ਜਾਓ।",
   "alertListenButton": "ਇਹ ਸੁਣੋ",
-  "alertListenPlaying": "ਚੇਤਾਵਨੀ ਪੜ੍ਹੀ ਜਾ ਰਹੀ ਹੈ..."
+  "alertListenPlaying": "ਚੇਤਾਵਨੀ ਪੜ੍ਹੀ ਜਾ ਰਹੀ ਹੈ...",
+  "personalDetailsTitle": "ਤੁਹਾਡੇ ਬਾਰੇ",
+  "personalDetailsSubtitle": "ਸਿਹਤ ਸੇਧ ਨੂੰ ਤੁਹਾਡੇ ਲਈ ਬਿਹਤਰ ਬਣਾਉਣ ਵਿੱਚ ਮਦਦ ਕਰੋ",
+  "genderLabel": "ਲਿੰਗ",
+  "male": "ਮਰਦ",
+  "female": "ਔਰਤ",
+  "ageLabel": "ਉਮਰ",
+  "privacyDisclaimer": "ਇਹ ਡੇਟਾ ਨਿੱਜੀ ਹੈ ਅਤੇ ਕਿਤੇ ਵੀ ਸਾਂਝਾ ਨਹੀਂ ਕੀਤਾ ਜਾਵੇਗਾ",
+  "selectOne": "ਇੱਕ ਚੁਣੋ",
+  "historySubtitle": "ਤੁਹਾਡੀਆਂ ਪਿਛਲੀਆਂ ਰਿਪੋਰਟਾਂ ਅਤੇ ਸਿੰਕ ਸਥਿਤੀ",
+  "switchRole": "ਭੂਮਿਕਾ ਬਦਲੋ"
 }
+

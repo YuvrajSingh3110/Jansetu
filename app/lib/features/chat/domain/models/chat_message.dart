@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 class ChatMessage {
@@ -32,6 +33,28 @@ class ChatMessage {
       isComplete: isComplete ?? this.isComplete,
       imageBytes: imageBytes ?? this.imageBytes,
       imageName: imageName ?? this.imageName
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'text': text,
+      'isUser': isUser,
+      'isComplete': isComplete,
+      'imageBytes': imageBytes != null ? base64Encode(imageBytes!) : null,
+      'imageName': imageName,
+    };
+  }
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    return ChatMessage(
+      id: json['id'] as String,
+      text: json['text'] as String,
+      isUser: json['isUser'] as bool,
+      isComplete: json['isComplete'] as bool,
+      imageBytes: json['imageBytes'] != null ? base64Decode(json['imageBytes'] as String) : null,
+      imageName: json['imageName'] as String?,
     );
   }
 }

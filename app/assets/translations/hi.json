@@ -62,5 +62,10 @@
   "ageLabel": "उम्र",
   "privacyDisclaimer": "यह डेटा निजी है और कहीं साझा नहीं किया जाएगा",
   "selectOne": "एक चुनें",
-  "historySubtitle": "आपकी पिछली रिपोर्ट और सिंक स्थिति"
+  "historySubtitle": "आपकी पिछली रिपोर्ट और सिंक स्थिति",
+  "switchRole": "भूमिका बदलें",
+  "noPastChats": "कोई पिछला AI चैट नहीं मिला",
+  "readOnlyInfo": "यह पिछले चैट का केवल-पढ़ने योग्य दृश्य है।",
+  "submitReport": "रिपोर्ट जमा करें"
 }
+

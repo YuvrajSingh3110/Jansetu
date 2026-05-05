@@ -17,4 +17,6 @@ abstract class OnboardingRepositoryInterface {
 
   Future<void> completeOnboarding();
   Future<bool> isOnboardingComplete();
+
+  Future<void> clearAll();
 }

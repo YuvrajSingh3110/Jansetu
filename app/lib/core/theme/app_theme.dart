@@ -112,6 +112,13 @@ class AppTextStyles {
     fontWeight: FontWeight.w400,
     color: AppColors.textMuted,
   );
+
+  /// Standard body text
+  static TextStyle bodyText = GoogleFonts.poppins(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: AppColors.textPrimary,
+  );
 }
 
 class AppTheme {

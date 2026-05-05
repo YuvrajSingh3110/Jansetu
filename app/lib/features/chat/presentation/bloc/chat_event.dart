@@ -41,6 +41,14 @@ class ImageAttachmentCleared extends ChatEvent {
   const ImageAttachmentCleared();
 }
 
+class SubmitReportRequested extends ChatEvent {
+  const SubmitReportRequested();
+}
+
+class GenerateSessionHeader extends ChatEvent {
+  const GenerateSessionHeader();
+}
+
 class VoiceInputStarted extends ChatEvent {
   final String localeCode;
   const VoiceInputStarted({required this.localeCode});

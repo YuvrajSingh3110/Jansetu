@@ -10,6 +10,9 @@ import 'package:jansetu/features/chat/presentation/screens/chat_screen.dart';
 import 'package:jansetu/features/history/screens/history_screen.dart';
 import 'package:jansetu/features/nearby/screens/nearby_screen.dart';
 import 'package:jansetu/features/onboarding/presentation/bloc/onboarding_bloc.dart';
+import 'package:jansetu/features/onboarding/presentation/bloc/onboarding_event.dart';
+import 'package:jansetu/features/asha/data/asha_repository.dart';
+import 'package:jansetu/features/asha/data/asha_models.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,11 +24,41 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _villageName = '...';
   int _selectedIndex = 0;
+  AshaAlert? _latestAlert;
+  final AshaRepository _ashaRepo = AshaRepository();
 
   @override
   void initState() {
     super.initState();
     _fetchLocation();
+    _loadAlerts();
+  }
+
+  Future<void> _loadAlerts() async {
+    // 1. Try to load cached alerts first for immediate display
+    try {
+      final cachedAlerts = await _ashaRepo.loadCachedAlerts();
+      if (cachedAlerts.isNotEmpty && mounted) {
+        setState(() {
+          // Sort by newest first just in case
+          cachedAlerts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          _latestAlert = cachedAlerts.first;
+        });
+      }
+    } catch (_) {}
+
+    // 2. Try fetching fresh alerts from the network
+    try {
+      final freshAlerts = await _ashaRepo.fetchAlerts();
+      if (freshAlerts.isNotEmpty && mounted) {
+        setState(() {
+          freshAlerts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          _latestAlert = freshAlerts.first;
+        });
+      }
+    } catch (_) {
+      // Internet might be poor, silently fall back to cached data
+    }
   }
 
   Future<void> _fetchLocation() async {
@@ -71,8 +104,10 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
             child: Column(
               children: [
-                _buildAlertBox(),
-                const SizedBox(height: 24),
+                if (_latestAlert != null) ...[
+                  _buildAlertBox(),
+                  const SizedBox(height: 24),
+                ],
                 _buildMicCard(),
                 const SizedBox(height: 24),
                 Row(
@@ -110,17 +145,32 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: const BoxDecoration(
         gradient: AppColors.headerGradient,
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'namaste'.tr(),
-            style: AppTextStyles.headerTitle.copyWith(fontSize: 28),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'namaste'.tr(),
+                  style: AppTextStyles.headerTitle.copyWith(fontSize: 28),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'homeGreeting'.tr(args: [_villageName]),
+                  style: AppTextStyles.headerSubtitle.copyWith(fontSize: 15),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'homeGreeting'.tr(args: [_villageName]),
-            style: AppTextStyles.headerSubtitle.copyWith(fontSize: 15),
+          IconButton(
+            icon: const Icon(Icons.switch_account, color: Colors.white),
+            tooltip: 'switchRole'.tr(),
+            onPressed: () {
+              context.read<OnboardingBloc>().add(const OnboardingResetRequested());
+            },
           ),
         ],
       ),
@@ -128,10 +178,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildAlertBox() {
+    if (_latestAlert == null) return const SizedBox.shrink();
+    
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const AlertDetailScreen()),
+          MaterialPageRoute(builder: (_) => AlertDetailScreen(alert: _latestAlert!)),
         );
       },      borderRadius: BorderRadius.circular(4),
       child: Container(
@@ -152,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'alertTitle'.tr(),
+                    _latestAlert!.title,
                     style: const TextStyle(
                       color: Color(0xFFB71C1C),
                       fontWeight: FontWeight.w600,
@@ -164,7 +216,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'alertSubtitle'.tr(),
+              _latestAlert!.description,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: Color(0xFF7F0000),
                 fontSize: 14,

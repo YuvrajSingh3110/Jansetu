@@ -2,9 +2,12 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:jansetu/core/services/tts_service.dart';
 import 'package:jansetu/core/theme/app_theme.dart';
+import 'package:jansetu/features/asha/data/asha_models.dart';
 
 class AlertDetailScreen extends StatefulWidget {
-  const AlertDetailScreen({super.key});
+  final AshaAlert alert;
+
+  const AlertDetailScreen({super.key, required this.alert});
 
   @override
   State<AlertDetailScreen> createState() => _AlertDetailScreenState();
@@ -20,8 +23,8 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
     await _ttsService.setLanguageForLocale(localeCode);
 
     final spokenText = [
-      'alertDetailTitle'.tr(),
-      'alertDetailBody'.tr(),
+      widget.alert.title,
+      widget.alert.description,
       'alertActionHeader'.tr(),
       'alertAction1Title'.tr(),
       'alertAction1Body'.tr(),
@@ -63,7 +66,10 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _AlertSummaryCard(),
+                    _AlertSummaryCard(
+                      title: widget.alert.title,
+                      description: widget.alert.description,
+                    ),
                     const SizedBox(height: 28),
                     Text(
                       'alertActionHeader'.tr(),
@@ -123,7 +129,7 @@ class _AlertHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: const BoxDecoration(
         color: Color(0xFFAF2F2F),
       ),
@@ -168,6 +174,11 @@ class _AlertHeader extends StatelessWidget {
 }
 
 class _AlertSummaryCard extends StatelessWidget {
+  final String title;
+  final String description;
+
+  const _AlertSummaryCard({required this.title, required this.description});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -182,7 +193,7 @@ class _AlertSummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'alertDetailTitle'.tr(),
+            title,
             style: AppTextStyles.roleTitle.copyWith(
               fontSize: 22,
               color: const Color(0xFFAF2F2F),
@@ -190,7 +201,7 @@ class _AlertSummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'alertDetailBody'.tr(),
+            description,
             style: AppTextStyles.roleSubtitle.copyWith(
               fontSize: 18,
               color: const Color(0xFF7F1D1D),
