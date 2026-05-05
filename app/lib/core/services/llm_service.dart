@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer' as developer;
+
 import 'package:flutter_gemma/flutter_gemma.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:jansetu/core/storage/secure_storage_service.dart';
+import 'package:jansetu/core/services/model_download_service.dart';
 
 class LlmService {
   LlmService._internal();
@@ -9,12 +12,13 @@ class LlmService {
   factory LlmService() => _instance;
 
   bool _isInitialized = false;
+  bool _isModelMissing = false;
   InferenceModel? _model;
   InferenceChat? _chat;
   bool _chatSupportsImages = false;
 
-  static const _modelPath =
-      '/storage/emulated/0/Download/gemma-4-E2B-it.litertlm';
+  bool get isModelMissing => _isModelMissing;
+
   static const String _jansetuInstruction = '''
 You are Jansetu's on-device epidemiological extraction model.
 You convert community health worker or villager speech transcripts into compact disease-surveillance signals.
@@ -27,26 +31,6 @@ Return plain text only.
 If the input is unclear, say what is uncertain briefly instead of inventing details.
 ''';
 
-  Future<bool> _requestStoragePermission() async {
-    // Android 13+ uses granular media permissions
-    // Android 10-12 uses READ_EXTERNAL_STORAGE
-    PermissionStatus status;
-
-    if (await Permission.manageExternalStorage.isGranted) {
-      return true;
-    }
-
-    // Try READ_EXTERNAL_STORAGE first (covers Android 10-12)
-    status = await Permission.storage.request();
-    if (status.isGranted) return true;
-
-    // On Android 13+, storage permission is always denied — that's expected.
-    // The Downloads folder is readable via MediaStore or direct path after
-    // granting manageExternalStorage. Request it as fallback.
-    status = await Permission.manageExternalStorage.request();
-    return status.isGranted;
-  }
-
   Future<void> initialize() async {
     if (_isInitialized) return;
 
@@ -54,29 +38,33 @@ If the input is unclear, say what is uncertain briefly instead of inventing deta
       await FlutterGemma.initialize();
 
       if (!FlutterGemma.hasActiveModel()) {
-        // Request storage permission before accessing the file
-        final hasPermission = await _requestStoragePermission();
-        if (!hasPermission) {
-          developer.log(
-            'Storage permission denied — cannot load model from Downloads.',
-            name: 'LlmService',
-          );
+        final isDownloaded = await ModelDownloadService().isModelAvailable();
+        if (!isDownloaded) {
+          _isModelMissing = true;
           _isInitialized = true;
           return;
         }
 
-        developer.log('Loading model from: $_modelPath', name: 'LlmService');
+        final modelPath = await ModelDownloadService().resolveModelPath();
+        if (modelPath == null) {
+          _isModelMissing = true;
+          _isInitialized = true;
+          return;
+        }
+        developer.log('Loading model from: $modelPath', name: 'LlmService');
 
         await FlutterGemma.installModel(
           modelType: ModelType.gemmaIt,
           fileType: ModelFileType.task,
-        ).fromFile(_modelPath).install();
+        ).fromFile(modelPath).install();
       }
 
+      _isModelMissing = false;
       _isInitialized = true;
       developer.log('FlutterGemma initialized.', name: 'LlmService');
     } catch (e) {
       developer.log('Failed to initialize: $e', name: 'LlmService');
+      _isModelMissing = true;
       _isInitialized = true;
     }
   }
@@ -131,7 +119,8 @@ If the input is unclear, say what is uncertain briefly instead of inventing deta
         );
 
         if (!processed.success || processed.processedImage == null) {
-          final msg = processed.error?.message ??
+          final msg =
+              processed.error?.message ??
               'The selected image could not be prepared for the model.';
           for (final word in msg.split(' ')) {
             await Future.delayed(const Duration(milliseconds: 40));
@@ -191,6 +180,120 @@ If the input is unclear, say what is uncertain briefly instead of inventing deta
 
   Future<void> clearChat() async {
     await _chat?.clearHistory();
+  }
+
+  Future<String> getSummary(String userMessage) async {
+    if (!_isInitialized) await initialize();
+    if (_model == null) {
+      await _ensureChat(supportImage: false);
+    }
+    if (_model == null) return 'Chat Session';
+
+    try {
+      final summaryChat = await _model!.createChat(supportImage: false);
+      final promptMsg = Message.text(
+        text: 'Summarize the following in 3 to 6 words only (no formatting or quotes): $userMessage',
+        isUser: true,
+      );
+      await summaryChat.addQuery(promptMsg);
+
+      String responseText = '';
+      await for (final response in summaryChat.generateChatResponseAsync()) {
+        if (response is TextResponse) {
+          responseText += response.token;
+        }
+      }
+
+      return responseText.trim().isNotEmpty ? responseText.trim() : 'Chat Session';
+    } catch (e) {
+      return 'Chat Session';
+    }
+  }
+
+  Future<Map<String, dynamic>?> extractReport(String chatHistory) async {
+    if (!_isInitialized) await initialize();
+    if (_model == null) {
+      await _ensureChat(supportImage: false);
+    }
+    if (_model == null) return null;
+
+    try {
+      final extractChat = await _model!.createChat(supportImage: false);
+      const instruction = '''
+You are Jansetu's on-device epidemiological extraction model.
+You must extract the health symptoms discussed in this chat into a strictly formatted JSON object.
+Use ONLY the following symptom codes: fever, cough, breathlessness, diarrhoea, vomiting, rash, headache, bodyache, sore_throat, runny_nose, malnutrition, jaundice, conjunctivitis, seizure, unconscious, bleeding.
+Do not use any other symptom strings.
+
+Output exactly a JSON object in this format (no markdown formatting, no comments):
+{
+  "villageId": "clv001rampur",
+  "ageGroup": "adult", 
+  "gender": "unknown",
+  "symptoms": ["fever", "cough"],
+  "duration": null,
+  "severity": "mild",
+  "referral": false
+}
+If age group is unknown use "adult". For gender use "M", "F", or "unknown".
+For severity use "mild", "moderate", or "severe".
+Use the default values shown above if the actual values are not present in the chat.
+Strip all names and personal identifiers.
+''';
+
+      final promptMsg = Message.text(
+        text: '$instruction\n\nChat history to extract:\n$chatHistory',
+        isUser: true,
+      );
+
+      await extractChat.addQuery(promptMsg);
+      String responseText = '';
+      await for (final response in extractChat.generateChatResponseAsync()) {
+        if (response is TextResponse) {
+          responseText += response.token;
+        }
+      }
+
+      // Basic JSON parsing to handle possible markdown wrapping
+      final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(responseText);
+      if (jsonMatch != null) {
+        final Map<String, dynamic> parsed = Map<String, dynamic>.from(
+          jsonDecode(jsonMatch.group(0)!) as Map<dynamic, dynamic>,
+        );
+        parsed['reportedAt'] = DateTime.now().toUtc().toIso8601String();
+        parsed['hasPhoto'] = false; // Always false for now
+
+        // Fetch from local storage if missing/unknown and user is villager
+        final storage = SecureStorageService();
+        final role = await storage.readUserRole();
+        if (role == 'villager') {
+          if (parsed['gender'] == 'unknown' || parsed['gender'] == null) {
+            final storedGender = await storage.readGender();
+            if (storedGender != null) {
+              parsed['gender'] = storedGender.startsWith('M') ? 'M' : 'F';
+            }
+          }
+          if (parsed['ageGroup'] == 'unknown' || parsed['ageGroup'] == null) {
+            final storedAge = await storage.readAge();
+            if (storedAge != null) {
+              if (storedAge < 18) {
+                parsed['ageGroup'] = 'child';
+              } else if (storedAge >= 60) {
+                parsed['ageGroup'] = 'elderly';
+              } else {
+                parsed['ageGroup'] = 'adult';
+              }
+            }
+          }
+        }
+
+        return parsed;
+      }
+      return null;
+    } catch (e) {
+      developer.log('Extraction failed: $e', name: 'LlmService');
+      return null;
+    }
   }
 
   String _buildGuidedPrompt(String userPrompt) {

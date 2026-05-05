@@ -67,3 +67,9 @@ class OnboardingCompleted extends OnboardingEvent {
 class OnboardingStatusChecked extends OnboardingEvent {
   const OnboardingStatusChecked();
 }
+
+/// User requested to reset onboarding (logout).
+class OnboardingResetRequested extends OnboardingEvent {
+  const OnboardingResetRequested();
+}
+

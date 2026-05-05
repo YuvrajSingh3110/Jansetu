@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:jansetu/features/asha/data/asha_models.dart';
 import 'package:jansetu/features/asha/data/asha_repository.dart';
@@ -58,11 +59,11 @@ class _AshaDashboardScreenState extends State<AshaDashboardScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(_errorMessage ?? 'Unable to load ASHA dashboard'),
+                Text(_errorMessage ?? 'ashaDashboardLoadError'.tr()),
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: _loadDashboard,
-                  child: const Text('Retry'),
+                  child: Text('ashaRetry'.tr()),
                 ),
               ],
             ),
@@ -75,7 +76,7 @@ class _AshaDashboardScreenState extends State<AshaDashboardScreen> {
     final latestAlert = data.alerts.isEmpty ? null : data.alerts.first;
 
     return AshaScaffold(
-      title: 'ASHA Dashboard',
+      title: 'ashaDashboardTitle'.tr(),
       subtitle: '${data.profile.name} - ${data.profile.block.name}',
       activeTab: AshaTab.home,
       body: RefreshIndicator(
@@ -90,7 +91,7 @@ class _AshaDashboardScreenState extends State<AshaDashboardScreen> {
                   Expanded(
                     child: _StatCard(
                       value: '${data.profile.reportsCount}',
-                      label: 'Reports',
+                      label: 'ashaDashboardReports'.tr(),
                       tint: const Color(0xFFE2F2EE),
                       valueColor: const Color(0xFF0E7B60),
                     ),
@@ -99,7 +100,7 @@ class _AshaDashboardScreenState extends State<AshaDashboardScreen> {
                   Expanded(
                     child: _StatCard(
                       value: '${data.pendingSyncCount}',
-                      label: 'Pending\nsync',
+                      label: 'ashaDashboardPendingSync'.tr(),
                       tint: const Color(0xFFF8EEDB),
                       valueColor: const Color(0xFF946200),
                     ),
@@ -108,7 +109,7 @@ class _AshaDashboardScreenState extends State<AshaDashboardScreen> {
                   Expanded(
                     child: _StatCard(
                       value: '${data.alerts.length}',
-                      label: 'Alerts',
+                      label: 'ashaDashboardAlerts'.tr(),
                       tint: const Color(0xFFF8E6E6),
                       valueColor: const Color(0xFFC24747),
                     ),
@@ -146,7 +147,7 @@ class _AshaDashboardScreenState extends State<AshaDashboardScreen> {
                   Expanded(
                     child: _ActionCard(
                       icon: Icons.photo_camera_outlined,
-                      label: 'Photo assess',
+                      label: 'ashaDashboardPhotoAssess'.tr(),
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -160,7 +161,7 @@ class _AshaDashboardScreenState extends State<AshaDashboardScreen> {
                   Expanded(
                     child: _ActionCard(
                       icon: Icons.sync_rounded,
-                      label: 'Sync queue',
+                      label: 'ashaDashboardSyncQueue'.tr(),
                       onTap: () => openAshaTab(context, AshaTab.sync),
                     ),
                   ),
@@ -305,8 +306,8 @@ class _PrimaryReportCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
-            const Text(
-              'New patient report',
+            Text(
+              'ashaDashboardNewPatientReport'.tr(),
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
@@ -314,8 +315,8 @@ class _PrimaryReportCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Speak in any language',
+            Text(
+              'ashaDashboardSpeakAnyLanguage'.tr(),
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w500,

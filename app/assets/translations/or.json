@@ -1,4 +1,4 @@
-{
+﻿{
   "whoAreYou": "ଆପଣ କିଏ?",
   "healthWorkerTitle": "ASHA / ANM / CHW",
   "healthWorkerSubtitle": "ସ୍ୱାସ୍ଥ୍ୟ କର୍ମୀ — ମାମଲା ରିପୋର୍ଟ କରନ୍ତୁ",
@@ -53,5 +53,15 @@
   "alertAction3Title": "ଜ୍ୱର ହେଲେ PHC କୁ ଯାଆନ୍ତୁ",
   "alertAction3Body": "ଜ୍ୱର କିମ୍ବା କାଶ ଆରମ୍ଭ ହେଲେ PHC କୁ ଯାଆନ୍ତୁ।",
   "alertListenButton": "ଏହା ଶୁଣନ୍ତୁ",
-  "alertListenPlaying": "ସଚେତନୀ ପଢ଼ାଯାଉଛି..."
+  "alertListenPlaying": "ସଚେତନୀ ପଢ଼ାଯାଉଛି...",
+  "personalDetailsTitle": "ଆପଣଙ୍କ ବିଷୟରେ",
+  "personalDetailsSubtitle": "ସ୍ୱାସ୍ଥ୍ୟ ପରାମର୍ଶକୁ ଆପଣଙ୍କ ପାଇଁ ଉନ୍ନତ କରିବାରେ ସାହାଯ୍ୟ କରନ୍ତୁ",
+  "genderLabel": "ଲିଙ୍ଗ",
+  "male": "ପୁରୁଷ",
+  "female": "ମହିଳା",
+  "ageLabel": "ବୟସ",
+  "privacyDisclaimer": "ଏହି ଡାଟା ଗୋପନୀୟ ଅଟେ ଏବଂ କେଉଁଠାରେ ସେୟାର କରାଯିବ ନାହିଁ",
+  "selectOne": "ଗୋଟିଏ ବାଛନ୍ତୁ",
+  "historySubtitle": "ଆପଣଙ୍କ ପୂର୍ବ ରିପୋର୍ଟ ଏବଂ ସିଙ୍କ୍ ସ୍ଥିତି",
+  "switchRole": "ଭୂମିକା ପରିବର୍ତ୍ତନ କରନ୍ତୁ"
 }

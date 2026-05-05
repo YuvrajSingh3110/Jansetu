@@ -63,4 +63,9 @@ class OnboardingRepository implements OnboardingRepositoryInterface {
   Future<bool> isOnboardingComplete() async {
     return _storage.isOnboardingComplete();
   }
+
+  @override
+  Future<void> clearAll() async {
+    await _storage.clearAll();
+  }
 }

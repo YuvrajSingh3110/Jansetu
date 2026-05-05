@@ -5,6 +5,7 @@ import 'package:jansetu/app/app.dart';
 import 'package:jansetu/features/sync_queue/sync_auto_service.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:jansetu/features/sync_queue/sync_worker.dart';
+import 'package:jansetu/core/services/model_download_service.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -21,6 +22,7 @@ void main() async {
     callbackDispatcher,
   );
   await SyncAutoService.instance.initialize();
+  await ModelDownloadService().initialize();
 
   // Lock to portrait — this app targets low-spec Android phones in the field.
   SystemChrome.setPreferredOrientations([
@@ -47,6 +49,7 @@ void main() async {
       ],
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
+      useFallbackTranslations: true,
       child: const JansetuApp(),
     ),
   );

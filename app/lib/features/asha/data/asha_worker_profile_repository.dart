@@ -8,8 +8,12 @@ class AshaWorkerProfile {
     required this.employeeId,
     required this.phoneNumber,
     required this.designation,
-    required this.reportingOffice,
-    required this.supervisorName,
+    required this.districtId,
+    required this.districtName,
+    required this.districtState,
+    required this.blockId,
+    required this.blockName,
+    required this.primaryVillageId,
     required this.primaryVillage,
     this.profileImagePath,
   });
@@ -18,8 +22,12 @@ class AshaWorkerProfile {
   final String employeeId;
   final String phoneNumber;
   final String designation;
-  final String reportingOffice;
-  final String supervisorName;
+  final String districtId;
+  final String districtName;
+  final String districtState;
+  final String blockId;
+  final String blockName;
+  final String primaryVillageId;
   final String primaryVillage;
   final String? profileImagePath;
 
@@ -28,8 +36,12 @@ class AshaWorkerProfile {
         'employeeId': employeeId,
         'phoneNumber': phoneNumber,
         'designation': designation,
-        'reportingOffice': reportingOffice,
-        'supervisorName': supervisorName,
+        'districtId': districtId,
+        'districtName': districtName,
+        'districtState': districtState,
+        'blockId': blockId,
+        'blockName': blockName,
+        'primaryVillageId': primaryVillageId,
         'primaryVillage': primaryVillage,
         'profileImagePath': profileImagePath,
       };
@@ -40,8 +52,12 @@ class AshaWorkerProfile {
       employeeId: json['employeeId']?.toString() ?? '',
       phoneNumber: json['phoneNumber']?.toString() ?? '',
       designation: json['designation']?.toString() ?? '',
-      reportingOffice: json['reportingOffice']?.toString() ?? '',
-      supervisorName: json['supervisorName']?.toString() ?? '',
+      districtId: json['districtId']?.toString() ?? '',
+      districtName: json['districtName']?.toString() ?? '',
+      districtState: json['districtState']?.toString() ?? '',
+      blockId: json['blockId']?.toString() ?? '',
+      blockName: json['blockName']?.toString() ?? '',
+      primaryVillageId: json['primaryVillageId']?.toString() ?? '',
       primaryVillage: json['primaryVillage']?.toString() ?? '',
       profileImagePath: json['profileImagePath']?.toString(),
     );
@@ -52,8 +68,12 @@ class AshaWorkerProfile {
     String? employeeId,
     String? phoneNumber,
     String? designation,
-    String? reportingOffice,
-    String? supervisorName,
+    String? districtId,
+    String? districtName,
+    String? districtState,
+    String? blockId,
+    String? blockName,
+    String? primaryVillageId,
     String? primaryVillage,
     String? profileImagePath,
   }) {
@@ -62,8 +82,12 @@ class AshaWorkerProfile {
       employeeId: employeeId ?? this.employeeId,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       designation: designation ?? this.designation,
-      reportingOffice: reportingOffice ?? this.reportingOffice,
-      supervisorName: supervisorName ?? this.supervisorName,
+      districtId: districtId ?? this.districtId,
+      districtName: districtName ?? this.districtName,
+      districtState: districtState ?? this.districtState,
+      blockId: blockId ?? this.blockId,
+      blockName: blockName ?? this.blockName,
+      primaryVillageId: primaryVillageId ?? this.primaryVillageId,
       primaryVillage: primaryVillage ?? this.primaryVillage,
       profileImagePath: profileImagePath ?? this.profileImagePath,
     );
@@ -91,12 +115,18 @@ class AshaWorkerProfileRepository {
     return profile != null &&
         profile.fullName.isNotEmpty &&
         profile.employeeId.isNotEmpty &&
-        profile.reportingOffice.isNotEmpty;
+        profile.designation.isNotEmpty &&
+        profile.districtId.isNotEmpty &&
+        profile.primaryVillageId.isNotEmpty;
   }
 
   Future<void> updateProfileImage(String? imagePath) async {
     final current = await loadProfile();
     if (current == null) return;
     await saveProfile(current.copyWith(profileImagePath: imagePath));
+  }
+
+  Future<void> clearProfile() async {
+    await _storage.writeAshaWorkerProfile('');
   }
 }

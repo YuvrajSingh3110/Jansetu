@@ -1,4 +1,4 @@
-{
+﻿{
   "whoAreYou": "আপনি কে?",
   "healthWorkerTitle": "ASHA / ANM / CHW",
   "healthWorkerSubtitle": "স্বাস্থ্যকর্মী — কেস রিপোর্ট করুন",
@@ -53,5 +53,15 @@
   "alertAction3Title": "জ্বর হলে PHC-তে যান",
   "alertAction3Body": "জ্বর বা কাশি শুরু হলে PHC-তে যান।",
   "alertListenButton": "এটি শুনুন",
-  "alertListenPlaying": "সতর্কতা পড়া হচ্ছে..."
+  "alertListenPlaying": "সতর্কতা পড়া হচ্ছে...",
+  "personalDetailsTitle": "আপনার সম্পর্কে",
+  "personalDetailsSubtitle": "স্বাস্থ্য পরামর্শকে আপনার জন্য আরও ভালো করতে সাহায্য করুন",
+  "genderLabel": "লিঙ্গ",
+  "male": "পুরুষ",
+  "female": "মহিলা",
+  "ageLabel": "বয়স",
+  "privacyDisclaimer": "এই ডেটা ব্যক্তিগত এবং কোথাও শেয়ার করা হবে না",
+  "selectOne": "একটি বেছে নিন",
+  "historySubtitle": "আপনার আগের রিপোর্ট এবং সিঙ্ক স্ট্যাটাস",
+  "switchRole": "ভূমিকা পরিবর্তন করুন"
 }

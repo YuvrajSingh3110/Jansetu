@@ -1,5 +1,6 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:jansetu/features/sync_queue/sync_queue_db.dart';
 
@@ -55,21 +56,21 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
                   bottomRight: Radius.circular(24),
                 ),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Sync queue',
-                    style: TextStyle(
+                    'ashaSyncQueueTitle'.tr(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    'Auto-syncs on 2G burst',
-                    style: TextStyle(
+                    'ashaSyncQueueSubtitle'.tr(),
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
                     ),
@@ -92,7 +93,8 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
                               borderRadius: BorderRadius.circular(18),
                             ),
                             child: Text(
-                              '$_pendingCount reports queued\nWaiting for signal. Will send in <2KB packets automatically. No action needed.',
+                              'ashaSyncQueueSummary'
+                                  .tr(args: ['$_pendingCount']),
                               style: const TextStyle(
                                 height: 1.55,
                                 fontSize: 18,
@@ -102,12 +104,14 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
                           ),
                           const SizedBox(height: 12),
                           if (_items.isEmpty)
-                            const Padding(
-                              padding: EdgeInsets.only(top: 30),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 30),
                               child: Center(
                                 child: Text(
-                                  'No queued reports yet.',
-                                  style: TextStyle(color: Color(0xFF6C7889)),
+                                  'ashaSyncQueueEmpty'.tr(),
+                                  style: const TextStyle(
+                                    color: Color(0xFF6C7889),
+                                  ),
                                 ),
                               ),
                             )
@@ -116,7 +120,10 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
                               (item) => Column(
                                 children: [
                                   _QueueCell(item: item),
-                                  const Divider(height: 1, color: Color(0xFFE7EAF0)),
+                                  const Divider(
+                                    height: 1,
+                                    color: Color(0xFFE7EAF0),
+                                  ),
                                 ],
                               ),
                             ),
@@ -126,19 +133,23 @@ class _SyncQueueScreenState extends State<SyncQueueScreen> {
                               const _LegendDot(color: Color(0xFFF2A324)),
                               const SizedBox(width: 6),
                               Text(
-                                'Pending',
+                                'ashaSyncQueuePending'.tr(),
                                 style: _legendStyle(),
                               ),
                               const SizedBox(width: 18),
                               const _LegendDot(color: Color(0xFF18A26E)),
                               const SizedBox(width: 6),
                               Text(
-                                'Sent',
+                                'ashaSyncQueueSent'.tr(),
                                 style: _legendStyle(),
                               ),
                               const Spacer(),
                               Text(
-                                'Total: ${(_pendingSize / 1024).toStringAsFixed(1)} KB',
+                                'ashaSyncQueueTotal'.tr(
+                                  args: [
+                                    (_pendingSize / 1024).toStringAsFixed(1),
+                                  ],
+                                ),
                                 style: _legendStyle(),
                               ),
                             ],
@@ -227,38 +238,45 @@ class _QueueListItem {
   factory _QueueListItem.fromRow(Map<String, dynamic> row) {
     Map<String, dynamic> payload = const {};
     try {
-      payload = jsonDecode(row['payload']?.toString() ?? '{}')
-          as Map<String, dynamic>;
+      payload =
+          jsonDecode(row['payload']?.toString() ?? '{}') as Map<String, dynamic>;
     } catch (_) {}
 
-    final gender = payload['gender']?.toString() ?? 'U';
-    final ageGroup = payload['ageGroup']?.toString() ?? 'adult';
-    final ageLabel = switch (ageGroup) {
-      'child' => 'Child',
-      'elderly' => '60+',
-      _ => 'Adult',
-    };
+    final gender = _normalizeGender(payload['gender']?.toString());
     final symptoms = ((payload['symptoms'] as List?) ?? const [])
         .map((item) => item.toString())
         .toList();
     final symptomLabel = symptoms.isEmpty
         ? 'General check'
         : symptoms.map(_prettySymptom).join(', ');
-    final village = payload['villageId']?.toString().replaceFirst('clv', '') ?? 'Rampur';
+    final village = payload['villageName']?.toString().trim().isNotEmpty == true
+        ? payload['villageName']!.toString()
+        : payload['villageId']?.toString().replaceFirst('clv', '') ??
+            'Village';
     final status = row['status']?.toString() ?? 'PENDING';
     final timestamp = DateTime.tryParse(row['timestamp']?.toString() ?? '');
-    final timeLabel = timestamp == null
-        ? 'Unknown'
-        : _formatTimestamp(timestamp.toLocal());
+    final timeLabel =
+        timestamp == null ? 'Unknown' : _formatTimestamp(timestamp.toLocal());
 
     return _QueueListItem(
-      title: '$gender/$ageLabel · $symptomLabel',
+      title: gender == null ? symptomLabel : '$gender · $symptomLabel',
       subtitle: status == 'SENT'
-          ? '$timeLabel · Sent ✓'
+          ? '$timeLabel · ${'ashaSyncQueueSentShort'.tr()}'
           : '$timeLabel · ${_titleCaseVillage(village)}',
       payloadSize: (row['payload_size'] as num?)?.toInt() ?? 0,
       isSent: status == 'SENT',
     );
+  }
+}
+
+String? _normalizeGender(String? raw) {
+  switch ((raw ?? '').trim().toUpperCase()) {
+    case 'F':
+      return 'Female';
+    case 'M':
+      return 'Male';
+    default:
+      return null;
   }
 }
 
@@ -301,10 +319,11 @@ String _titleCaseVillage(String value) {
 
 String _formatTimestamp(DateTime time) {
   final now = DateTime.now();
-  final isToday = now.year == time.year &&
-      now.month == time.month &&
-      now.day == time.day;
-  final hour = time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
+  final isToday =
+      now.year == time.year && now.month == time.month && now.day == time.day;
+  final hour =
+      time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
   final minute = time.minute.toString().padLeft(2, '0');
   return isToday ? 'Today $hour:$minute' : 'Yesterday';
 }
+

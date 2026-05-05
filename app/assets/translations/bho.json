@@ -1,4 +1,4 @@
-{
+﻿{
   "whoAreYou": "रउआ के हईं?",
   "healthWorkerTitle": "ASHA / ANM / CHW",
   "healthWorkerSubtitle": "स्वास्थ्य कार्यकर्ता — मामला रिपोर्ट करीं",
@@ -53,5 +53,15 @@
   "alertAction3Title": "बोखार होखे त PHC जाईं",
   "alertAction3Body": "अगर बोखार या खाँसी शुरू होखे त PHC जाईं।",
   "alertListenButton": "ई सुनीं",
-  "alertListenPlaying": "चेतावनी पढ़ल जा रहल बा..."
+  "alertListenPlaying": "चेतावनी पढ़ल जा रहल बा...",
+  "personalDetailsTitle": "रउआ बारे में",
+  "personalDetailsSubtitle": "स्वास्थ्य सलाह के रउआ खातिर बेहतर बनावे में मदद करीं",
+  "genderLabel": "लिंग",
+  "male": "पुरुष",
+  "female": "महिला",
+  "ageLabel": "उम्र",
+  "privacyDisclaimer": "ई डेटा निजी बा अउर कहीं साझा ना कइल जाई",
+  "selectOne": "एक चुनीं",
+  "historySubtitle": "रउआ पिछला रिपोर्ट अउर सिंक स्थिति",
+  "switchRole": "भूमिका बदलीं"
 }
