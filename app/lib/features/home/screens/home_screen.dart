@@ -185,7 +185,8 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => AlertDetailScreen(alert: _latestAlert!)),
         );
-      },      borderRadius: BorderRadius.circular(4),
+      },
+      borderRadius: BorderRadius.circular(4),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
@@ -439,7 +440,7 @@ class _ListeningBottomSheetState extends State<_ListeningBottomSheet> {
     final langCode = context.read<OnboardingBloc>().state.selectedLanguage?.localeCode ?? 'hi';
     await _speechService.startListening(
       localeId: langCode,
-      onResult: (text) {
+      onResult: (text, _) {
         if (mounted) {
           setState(() {
             _currentText = text;

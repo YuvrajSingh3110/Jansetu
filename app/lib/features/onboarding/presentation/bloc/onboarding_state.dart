@@ -24,6 +24,8 @@ enum OnboardingStatus {
 }
 
 class OnboardingState extends Equatable {
+  static const Object _unset = Object();
+
   final OnboardingStatus status;
   final AppLanguage? selectedLanguage;
   final UserRole? selectedRole;
@@ -42,29 +44,37 @@ class OnboardingState extends Equatable {
 
   OnboardingState copyWith({
     OnboardingStatus? status,
-    AppLanguage? selectedLanguage,
-    UserRole? selectedRole,
-    String? selectedGender,
+    Object? selectedLanguage = _unset,
+    Object? selectedRole = _unset,
+    Object? selectedGender = _unset,
     int? selectedAge,
-    String? errorMessage,
+    Object? errorMessage = _unset,
   }) {
     return OnboardingState(
       status: status ?? this.status,
-      selectedLanguage: selectedLanguage ?? this.selectedLanguage,
-      selectedRole: selectedRole ?? this.selectedRole,
-      selectedGender: selectedGender ?? this.selectedGender,
+      selectedLanguage: identical(selectedLanguage, _unset)
+          ? this.selectedLanguage
+          : selectedLanguage as AppLanguage?,
+      selectedRole: identical(selectedRole, _unset)
+          ? this.selectedRole
+          : selectedRole as UserRole?,
+      selectedGender: identical(selectedGender, _unset)
+          ? this.selectedGender
+          : selectedGender as String?,
       selectedAge: selectedAge ?? this.selectedAge,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: identical(errorMessage, _unset)
+          ? this.errorMessage
+          : errorMessage as String?,
     );
   }
 
   @override
   List<Object?> get props => [
-        status,
-        selectedLanguage,
-        selectedRole,
-        selectedGender,
-        selectedAge,
-        errorMessage,
-      ];
+    status,
+    selectedLanguage,
+    selectedRole,
+    selectedGender,
+    selectedAge,
+    errorMessage,
+  ];
 }

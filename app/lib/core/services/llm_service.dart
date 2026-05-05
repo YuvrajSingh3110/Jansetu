@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
+
 import 'package:flutter_gemma/flutter_gemma.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:jansetu/core/storage/secure_storage_service.dart';
 import 'package:jansetu/core/services/model_download_service.dart';
 
@@ -114,7 +114,8 @@ If the input is unclear, say what is uncertain briefly instead of inventing deta
         );
 
         if (!processed.success || processed.processedImage == null) {
-          final msg = processed.error?.message ??
+          final msg =
+              processed.error?.message ??
               'The selected image could not be prepared for the model.';
           for (final word in msg.split(' ')) {
             await Future.delayed(const Duration(milliseconds: 40));
@@ -190,14 +191,14 @@ If the input is unclear, say what is uncertain briefly instead of inventing deta
         isUser: true,
       );
       await summaryChat.addQuery(promptMsg);
-      
+
       String responseText = '';
       await for (final response in summaryChat.generateChatResponseAsync()) {
         if (response is TextResponse) {
           responseText += response.token;
         }
       }
-      
+
       return responseText.trim().isNotEmpty ? responseText.trim() : 'Chat Session';
     } catch (e) {
       return 'Chat Session';
@@ -234,12 +235,12 @@ For severity use "mild", "moderate", or "severe".
 Use the default values shown above if the actual values are not present in the chat.
 Strip all names and personal identifiers.
 ''';
-      
+
       final promptMsg = Message.text(
         text: '$instruction\n\nChat history to extract:\n$chatHistory',
         isUser: true,
       );
-      
+
       await extractChat.addQuery(promptMsg);
       String responseText = '';
       await for (final response in extractChat.generateChatResponseAsync()) {
@@ -247,7 +248,7 @@ Strip all names and personal identifiers.
           responseText += response.token;
         }
       }
-      
+
       // Basic JSON parsing to handle possible markdown wrapping
       final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(responseText);
       if (jsonMatch != null) {

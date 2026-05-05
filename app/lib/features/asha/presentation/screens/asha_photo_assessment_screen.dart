@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:jansetu/features/asha/data/asha_repository.dart';
 import 'package:jansetu/features/photo/presentation/screens/photo_assessment_screen.dart';
@@ -10,9 +11,9 @@ class AshaPhotoAssessmentScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repository = AshaRepository();
     return PhotoAssessmentScreen(
-      title: 'Photo assessment',
-      subtitle: 'Shared ASHA and village photo pipeline',
-      saveButtonLabel: 'Add to report',
+      title: 'ashaPhotoTitle'.tr(),
+      subtitle: 'ashaPhotoSubtitle'.tr(),
+      saveButtonLabel: 'ashaPhotoAddToReport'.tr(),
       onSave: (imagePath, result) async {
         final payload = await repository.buildReportPayload(
           transcript:
@@ -28,7 +29,7 @@ class AshaPhotoAssessmentScreen extends StatelessWidget {
         );
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Photo assessment added to report queue.')),
+          SnackBar(content: Text('ashaPhotoQueued'.tr())),
         );
         Navigator.of(context).pop();
       },

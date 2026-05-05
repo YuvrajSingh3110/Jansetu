@@ -173,7 +173,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (currentSessionId == null) return;
 
     String? header = state.sessionHeader;
-    
+
     if (header == null) {
       // Find first user message for summarization
       final firstUserMsg = state.messages.firstWhere((m) => m.isUser, orElse: () => state.messages.first);
@@ -218,7 +218,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     
     await _speechService.startListening(
       localeId: event.localeCode,
-      onResult: (text) {
+      onResult: (text, _) {
         if (!isClosed) {
           add(VoiceInputUpdated(text));
         }
@@ -256,7 +256,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     try {
       developer.log('Submitting report... generating JSON from chat history.', name: 'ChatBloc');
-      
+
       final chatHistory = state.messages
           .map((m) => '${m.isUser ? "User" : "CHW"}: ${m.text}')
           .join('\n');
