@@ -6,16 +6,16 @@
 
 *An offline-first, voice-first, AI-powered disease surveillance network for rural India.*
 
-[![Gemma 4](https://img.shields.io/badge/Gemma_4-E4B_%2B_27B-1D9E75?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/gemma)
+[![Gemma 4](https://img.shields.io/badge/Gemma_4-E4B_%2B_31B-1D9E75?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/gemma)
 [![LiteRT-LM](https://img.shields.io/badge/LiteRT--LM-On_Device-0C447C?style=for-the-badge)](https://ai.google.dev/edge/litert)
-[![Ollama](https://img.shields.io/badge/Ollama-27B_Cloud-534AB7?style=for-the-badge)](https://ollama.com)
+[![Ollama](https://img.shields.io/badge/Ollama-31B_Cloud-534AB7?style=for-the-badge)](https://ollama.com)
 [![Unsloth](https://img.shields.io/badge/Unsloth-Fine--tuned-BA7517?style=for-the-badge)](https://unsloth.ai)
 [![Next.js](https://img.shields.io/badge/Next.js_14-Web_Dashboard-000000?style=for-the-badge&logo=next.js)](https://nextjs.org)
 [![Android](https://img.shields.io/badge/Android-Field_App-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
 
 [![Gemma 4 Good Hackathon](https://img.shields.io/badge/Gemma_4_Good_Hackathon-Health_%26_Sciences-E24B4A?style=for-the-badge)](https://www.kaggle.com/competitions/gemma-4-good-hackathon)
 
-[Demo Video](#demo) · [Architecture](#architecture) · [Setup](#setup) · [Android App](#android-app) · [Web Dashboard](#web-dashboard) · [Fine-tuning](#unsloth-fine-tuning) · [Team](#team)
+[Demo Video](#demo) · [Architecture](#architecture) · [Setup](#setup) · [Android App](#android-app) · [Web Dashboard](#web-dashboard) · [Fine-tuning](#unsloth-fine-tuning)
 
 </div>
 
@@ -51,7 +51,7 @@ An offline-first, voice-first health app for two types of users:
 All data is anonymised completely on-device before it ever touches storage. No names. No phone numbers. Village-level only.
 
 ### 2. Web dashboard — for the district
-A real-time intelligence platform for district health officers. Gemma 4 27B, running via Ollama on a district server, aggregates symptom signals from across all villages, detects outbreak patterns, drafts plain-language alerts and response playbooks, and generates Hindi health advisories that push back to ASHA worker phones.
+A real-time intelligence platform for district health officers. Gemma 4 31B, running via Ollama on a district server, aggregates symptom signals from across all villages, detects outbreak patterns, drafts plain-language alerts and response playbooks, and generates Hindi health advisories that push back to ASHA worker phones.
 
 The district officer sees a live geospatial heatmap, manages response teams, and broadcasts advisories — all from one screen.
 
@@ -101,7 +101,7 @@ The district officer sees a live geospatial heatmap, manages response teams, and
 │     Next.js 14 · PostgreSQL · Redis · Bull queue        │
 │                                                         │
 │  ┌─────────────────────────────────────────────────┐   │
-│  │         GEMMA 4 27B — DISTRICT SERVER           │   │
+│  │         GEMMA 4 31B — DISTRICT SERVER           │   │
 │  │              via Ollama · full precision         │   │
 │  │                                                 │   │
 │  │  Village A: fever×12, cough×10                  │   │
@@ -142,9 +142,9 @@ The district officer sees a live geospatial heatmap, manages response teams, and
 | Android edge | Gemma 4 E4B | **Function calling** | Structured symptom extraction → canonical JSON payload |
 | Android edge | Gemma 4 E4B | **Vision / multimodal** | On-device rash, wound, and malnutrition photo analysis |
 | Android edge | Gemma 4 E4B | **Text generation** | Real-time health guidance in local language, read aloud |
-| District cloud | Gemma 4 27B | **Long context reasoning** | Pattern detection across village aggregates over 72hr windows |
-| District cloud | Gemma 4 27B | **Structured output** | Alert JSON generation with risk level, affected villages, actions |
-| District cloud | Gemma 4 27B | **Text generation** | Plain English alerts, Hindi broadcast messages, response playbooks |
+| District cloud | Gemma 4 31B | **Long context reasoning** | Pattern detection across village aggregates over 72hr windows |
+| District cloud | Gemma 4 31B | **Structured output** | Alert JSON generation with risk level, affected villages, actions |
+| District cloud | Gemma 4 31B | **Text generation** | Plain English alerts, Hindi broadcast messages, response playbooks |
 | Fine-tuning | Gemma 4 E4B | **LoRA fine-tune** | Improved Bhojpuri/Gondi symptom extraction via Unsloth |
 
 ---
@@ -154,7 +154,7 @@ The district officer sees a live geospatial heatmap, manages response teams, and
 | Track | Technology | Usage |
 |-------|-----------|-------|
 | **LiteRT** | LiteRT-LM | Runs Gemma 4 E4B on Android device, offline |
-| **Ollama** | Ollama | Serves Gemma 4 27B on district server |
+| **Ollama** | Ollama | Serves Gemma 4 31B on district server |
 | **Unsloth** | Unsloth + LoRA | Fine-tunes E4B on Indian rural health vocabulary |
 
 ---
@@ -193,7 +193,7 @@ jansetu/
 │   │   └── broadcast/            # BroadcastComposer
 │   ├── lib/
 │   │   ├── prisma.ts             # DB client
-│   │   ├── ollama.ts             # Gemma 4 27B client + prompts
+│   │   ├── ollama.ts             # Gemma 4 31B client + prompts
 │   │   ├── outbreak-detector.ts  # Aggregation + detection pipeline
 │   │   ├── queue.ts              # Bull queue setup
 │   │   └── auth.ts               # NextAuth config
@@ -281,7 +281,7 @@ DATABASE_URL="postgresql://postgres:yourpassword@localhost:5432/jansetu"
 NEXTAUTH_SECRET="generate-a-random-32-char-string"
 NEXTAUTH_URL="http://localhost:3000"
 OLLAMA_URL="http://localhost:11434"
-OLLAMA_MODEL="gemma4:27b"
+OLLAMA_MODEL="gemma4:31b"
 REDIS_URL="redis://localhost:6379"
 INTERNAL_API_SECRET="jansetu-internal-2026"
 ```
@@ -290,8 +290,8 @@ INTERNAL_API_SECRET="jansetu-internal-2026"
 # Start Redis (Docker)
 docker run -d -p 6379:6379 redis
 
-# Pull Gemma 4 27B via Ollama
-ollama pull gemma4:27b
+# Pull Gemma 4 31B via Ollama
+ollama pull gemma4:31b
 
 # Set up database
 npx prisma migrate dev --name init
@@ -415,7 +415,7 @@ Aggregate by village
   { "Barsara": { fever: 9, cough: 8  } }
         │
         ▼
-Gemma 4 27B analysis (temperature: 0.1)
+Gemma 4 31B analysis (temperature: 0.1)
   → riskLevel: "high"
   → affectedVillages: ["Rampur", "Barsara", "Khajuri"]
   → diseasePattern: "ILI"
@@ -666,7 +666,7 @@ NEXTAUTH_URL="http://localhost:3000"
 
 # AI
 OLLAMA_URL="http://localhost:11434"
-OLLAMA_MODEL="gemma4:27b"
+OLLAMA_MODEL="gemma4:31b"
 
 # Queue
 REDIS_URL="redis://localhost:6379"
@@ -712,15 +712,15 @@ docker run -p 3000:3000 --env-file .env jansetu-web
 # Install Ollama on district server
 curl https://ollama.ai/install.sh | sh
 
-# Pull Gemma 4 27B
-ollama pull gemma4:27b
+# Pull Gemma 4 31B
+ollama pull gemma4:31b
 
 # Start Ollama service
 ollama serve
 
 # Verify
 curl http://localhost:11434/api/generate \
-  -d '{"model":"gemma4:27b","prompt":"test","stream":false}'
+  -d '{"model":"gemma4:31b","prompt":"test","stream":false}'
 ```
 
 ### Redis (district server)
@@ -743,7 +743,7 @@ sudo systemctl start redis-server
 | OS | Ubuntu 22.04 | Ubuntu 22.04 |
 | Network | 10 Mbps | 100 Mbps |
 
-> Gemma 4 27B runs on CPU via Ollama at approximately 2–4 tokens/second on a 16-core server. For the outbreak detection use case, this is fully adequate — detection runs async in the background, not in real time.
+> Gemma 4 31B runs on CPU via Ollama at approximately 2–4 tokens/second on a 16-core server. For the outbreak detection use case, this is fully adequate — detection runs async in the background, not in real time.
 
 ---
 
@@ -760,7 +760,7 @@ sudo systemctl start redis-server
 | Web framework | Next.js 14 App Router | Full-stack web |
 | Web UI | Tailwind CSS + shadcn/ui | Components |
 | Database | PostgreSQL + Prisma | Primary data store |
-| Cloud AI | Gemma 4 27B + Ollama | Outbreak detection |
+| Cloud AI | Gemma 4 31B + Ollama | Outbreak detection |
 | Job queue | Bull + Redis | Async AI jobs |
 | Auth | NextAuth.js | Session management |
 | Maps | Leaflet + OpenStreetMap | Offline-capable maps |
@@ -774,7 +774,7 @@ sudo systemctl start redis-server
 
 **Why voice-first?** ASHA workers carry paper registers and are often in the middle of a field visit. Typing is friction. Speaking is natural. Gemma 4's native audio capabilities remove the need for a separate STT pipeline.
 
-**Why aggregate before sending to Gemma 27B?** Individual reports sent to the big model would cost tokens and lose the epidemiological signal. Aggregating to village symptom counts first — `{fever: 12, cough: 10}` — gives the model the same view a human epidemiologist would use, and dramatically reduces token usage.
+**Why aggregate before sending to Gemma 31B?** Individual reports sent to the big model would cost tokens and lose the epidemiological signal. Aggregating to village symptom counts first — `{fever: 12, cough: 10}` — gives the model the same view a human epidemiologist would use, and dramatically reduces token usage.
 
 **Why SSE instead of WebSockets?** The district officer dashboard only needs one-way push from server to client. SSE is simpler, works through HTTP/2, and requires no special server setup. The connection stays open and new alerts appear instantly without polling.
 
