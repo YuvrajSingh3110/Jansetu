@@ -1,0 +1,468 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.sec{margin-bottom:2rem;}
+.sec-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--color-text-tertiary);margin-bottom:10px;padding-bottom:6px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.browser-frame{background:var(--color-background-secondary);border-radius:12px;border:0.5px solid var(--color-border-secondary);overflow:hidden;margin-bottom:1.5rem;}
+.browser-bar{background:#e8e8e8;padding:8px 12px;display:flex;align-items:center;gap:8px;}
+.dots{display:flex;gap:5px;}
+.dot{width:10px;height:10px;border-radius:50%;}
+.url{flex:1;background:#fff;border-radius:5px;padding:3px 10px;font-size:11px;color:#666;font-family:monospace;}
+.app{display:flex;height:420px;}
+.sidebar{width:200px;background:#0C447C;flex-shrink:0;display:flex;flex-direction:column;padding:0;}
+.sb-logo{padding:16px 14px 12px;border-bottom:1px solid rgba(255,255,255,0.1);}
+.sb-logo-title{font-size:15px;font-weight:500;color:#fff;letter-spacing:-0.3px;}
+.sb-logo-sub{font-size:10px;color:#85B7EB;margin-top:2px;}
+.sb-nav{padding:10px 8px;flex:1;}
+.sb-section{font-size:9px;color:#85B7EB;text-transform:uppercase;letter-spacing:0.06em;margin:10px 0 4px 6px;}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;margin-bottom:1px;cursor:pointer;}
+.sb-item.active{background:rgba(255,255,255,0.15);}
+.sb-icon{width:16px;height:16px;background:rgba(255,255,255,0.2);border-radius:4px;flex-shrink:0;}
+.sb-icon.red{background:rgba(226,75,74,0.6);}
+.sb-icon.green{background:rgba(29,158,117,0.6);}
+.sb-icon.amber{background:rgba(239,159,39,0.5);}
+.sb-label{font-size:11px;color:#B5D4F4;}
+.sb-item.active .sb-label{color:#fff;font-weight:500;}
+.sb-badge{margin-left:auto;background:#E24B4A;color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;}
+.main{flex:1;background:#F5F5F5;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{background:#fff;padding:0 18px;height:48px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #E5E5E5;flex-shrink:0;}
+.tb-title{font-size:14px;font-weight:500;color:#111;}
+.tb-sub{font-size:11px;color:#888;margin-top:1px;}
+.tb-right{display:flex;align-items:center;gap:8px;}
+.badge{font-size:10px;padding:3px 9px;border-radius:6px;font-weight:500;}
+.badge-r{background:#FCEBEB;color:#A32D2D;}
+.badge-g{background:#E1F5EE;color:#085041;}
+.badge-a{background:#FAEEDA;color:#633806;}
+.badge-b{background:#E6F1FB;color:#0C447C;}
+.content{padding:14px 18px;flex:1;overflow:hidden;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;}
+.stat{background:#fff;border-radius:10px;padding:12px 14px;border:1px solid #E5E5E5;}
+.stat-num{font-size:24px;font-weight:500;color:#111;line-height:1;}
+.stat-lbl{font-size:11px;color:#888;margin-top:4px;}
+.stat-delta{font-size:10px;margin-top:4px;}
+.grid-main{display:grid;grid-template-columns:1fr 340px;gap:10px;}
+.card{background:#fff;border-radius:10px;border:1px solid #E5E5E5;padding:12px 14px;}
+.card-title{font-size:12px;font-weight:500;color:#333;margin-bottom:8px;}
+.alert-item{border-radius:8px;padding:10px 12px;margin-bottom:7px;border-left:3px solid;}
+.ai-red{background:#FCEBEB;border-color:#E24B4A;}
+.ai-amber{background:#FAEEDA;border-color:#BA7517;}
+.ai-title{font-size:12px;font-weight:500;}
+.ai-body{font-size:11px;line-height:1.5;margin-top:3px;}
+.ai-red .ai-title{color:#A32D2D;}
+.ai-red .ai-body{color:#791F1F;}
+.ai-amber .ai-title{color:#633806;}
+.ai-amber .ai-body{color:#854F0B;}
+.ai-actions{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;}
+.ai-btn{font-size:10px;padding:3px 9px;border-radius:5px;font-weight:500;cursor:pointer;}
+.ai-btn-r{background:#E24B4A;color:#fff;}
+.ai-btn-s{background:#fff;color:#A32D2D;border:1px solid #F09595;}
+.ai-btn-a{background:#BA7517;color:#fff;}
+.trend-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.trend-lbl{font-size:11px;color:#555;width:80px;flex-shrink:0;}
+.trend-bar-bg{flex:1;height:5px;background:#f0f0f0;border-radius:3px;}
+.trend-bar{height:100%;border-radius:3px;}
+.trend-num{font-size:11px;color:#888;width:25px;text-align:right;}
+.feed-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #f5f5f5;}
+.feed-dot{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.feed-text{font-size:11px;color:#444;flex:1;line-height:1.4;}
+.feed-time{font-size:10px;color:#aaa;flex-shrink:0;}
+.map-ph{background:#d4e8c2;border-radius:8px;height:160px;position:relative;overflow:hidden;}
+.map-road{position:absolute;background:#fff;}
+.cluster{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#fff;transform:translate(-50%,-50%);}
+.chw-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f5f5f5;}
+.chw-av{width:24px;height:24px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#0C447C;flex-shrink:0;}
+.chw-name{font-size:11px;font-weight:500;color:#222;flex:1;}
+.bar-bg{height:3px;background:#f0f0f0;border-radius:2px;margin-top:3px;}
+.bar-f{height:100%;border-radius:2px;}
+.resp-step{background:#f9f9f9;border-radius:7px;padding:8px 10px;margin-bottom:5px;display:flex;gap:8px;}
+.step-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0;}
+.step-body{flex:1;}
+.step-title{font-size:11px;font-weight:500;color:#222;}
+.step-sub{font-size:10px;color:#777;margin-top:2px;}
+.step-status{font-size:9px;padding:2px 6px;border-radius:5px;margin-top:4px;display:inline-block;}
+.tl-item{display:flex;gap:8px;margin-bottom:8px;}
+.tl-dot{width:8px;height:8px;border-radius:50%;margin-top:3px;flex-shrink:0;}
+.tl-body{flex:1;}
+.tl-title{font-size:11px;font-weight:500;color:#222;}
+.tl-time{font-size:9px;color:#aaa;margin-top:1px;}
+.tl-desc{font-size:10px;color:#666;margin-top:2px;line-height:1.4;}
+input[type=checkbox]{width:12px;height:12px;}
+input[type=radio]{width:12px;height:12px;}
+.form-label{font-size:11px;color:#555;display:flex;align-items:center;gap:6px;margin-bottom:5px;cursor:pointer;}
+.msg-box{background:#f9f9f9;border-radius:8px;padding:10px;font-size:11px;color:#444;line-height:1.6;min-height:60px;border:1px solid #E5E5E5;}
+table.data{width:100%;border-collapse:collapse;font-size:11px;}
+table.data th{text-align:left;padding:6px 8px;color:#888;font-weight:500;border-bottom:1px solid #E5E5E5;font-size:10px;}
+table.data td{padding:6px 8px;border-bottom:1px solid #f5f5f5;color:#444;}
+.pill{display:inline-block;font-size:9px;padding:2px 7px;border-radius:8px;margin:1px;}
+.pill-r{background:#FCEBEB;color:#A32D2D;}
+.pill-g{background:#E1F5EE;color:#085041;}
+.pill-a{background:#FAEEDA;color:#633806;}
+.pill-b{background:#E6F1FB;color:#0C447C;}
+</style>
+
+<h2 style="position:absolute;left:-9999px;">Jansetu web dashboard — all screen designs for Priyanshu</h2>
+<div style="padding:0.5rem 0 1rem;">
+
+<div class="sec">
+<div class="sec-label">Screen 1 — Dashboard (command centre)</div>
+<div class="browser-frame">
+<div class="browser-bar"><div class="dots"><div class="dot" style="background:#ff5f57;"></div><div class="dot" style="background:#ffbd2e;"></div><div class="dot" style="background:#28c840;"></div></div><div class="url">jansetu.health.in/dashboard</div></div>
+<div class="app">
+<div class="sidebar">
+<div class="sb-logo"><div class="sb-logo-title">Jansetu</div><div class="sb-logo-sub">Varanasi District</div></div>
+<div class="sb-nav">
+<div class="sb-item active"><div class="sb-icon"></div><div class="sb-label">Dashboard</div></div>
+<div class="sb-item"><div class="sb-icon red"></div><div class="sb-label">Alerts</div><div class="sb-badge">2</div></div>
+<div class="sb-item"><div class="sb-icon green"></div><div class="sb-label">Heatmap</div></div>
+<div class="sb-item"><div class="sb-icon"></div><div class="sb-label">Reports</div></div>
+<div class="sb-section">Response</div>
+<div class="sb-item"><div class="sb-icon amber"></div><div class="sb-label">Deploy teams</div></div>
+<div class="sb-item"><div class="sb-icon"></div><div class="sb-label">Broadcast</div></div>
+<div class="sb-section">Network</div>
+<div class="sb-item"><div class="sb-icon green"></div><div class="sb-label">CHW status</div></div>
+<div class="sb-item"><div class="sb-icon"></div><div class="sb-label">Settings</div></div>
+</div>
+</div>
+<div class="main">
+<div class="topbar">
+<div><div class="tb-title">District overview</div><div class="tb-sub">Apr 21, 2026 · 09:41 · Live</div></div>
+<div class="tb-right"><span class="badge badge-r">2 active alerts</span><span class="badge badge-g">47 CHWs online</span><span class="badge badge-b">Dr. Sharma</span></div>
+</div>
+<div class="content">
+<div class="grid4">
+<div class="stat"><div class="stat-num">247</div><div class="stat-lbl">Reports today</div><div class="stat-delta" style="color:#1D9E75;">+32 vs yesterday</div></div>
+<div class="stat"><div class="stat-num" style="color:#A32D2D;">2</div><div class="stat-lbl">Active outbreaks</div><div class="stat-delta" style="color:#A32D2D;">Needs response</div></div>
+<div class="stat"><div class="stat-num">63</div><div class="stat-lbl">Villages covered</div><div class="stat-delta" style="color:#888;">of 78 in district</div></div>
+<div class="stat"><div class="stat-num">94%</div><div class="stat-lbl">CHW sync rate</div><div class="stat-delta" style="color:#1D9E75;">Good coverage</div></div>
+</div>
+<div class="grid-main">
+<div>
+<div class="card" style="margin-bottom:10px;">
+<div class="card-title">Active alerts</div>
+<div class="alert-item ai-red">
+<div class="ai-title">Outbreak · High confidence · Rampur cluster</div>
+<div class="ai-body">18 fever+cough cases across Rampur, Barsara, Khajuri in 72 hrs. Gemma 4 pattern: influenza-like illness. Recommend rapid response team.</div>
+<div class="ai-actions"><span class="ai-btn ai-btn-r">Deploy team</span><span class="ai-btn ai-btn-s">View on map</span><span class="ai-btn ai-btn-s">Broadcast</span></div>
+</div>
+<div class="alert-item ai-amber">
+<div class="ai-title">Watch · Medium confidence · Mau diarrhoea</div>
+<div class="ai-body">6 diarrhoea cases in 2 days, Mau block. Below threshold but trending up.</div>
+<div class="ai-actions"><span class="ai-btn ai-btn-a">Monitor</span><span class="ai-btn" style="background:#fff;color:#666;border:1px solid #ddd;font-size:10px;padding:3px 9px;border-radius:5px;">Dismiss</span></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">Symptom trends (7 days)</div>
+<div class="trend-row"><div class="trend-lbl">Fever</div><div class="trend-bar-bg"><div class="trend-bar" style="width:80%;background:#E24B4A;"></div></div><div class="trend-num">89</div></div>
+<div class="trend-row"><div class="trend-lbl">Cough</div><div class="trend-bar-bg"><div class="trend-bar" style="width:65%;background:#378ADD;"></div></div><div class="trend-num">72</div></div>
+<div class="trend-row"><div class="trend-lbl">Diarrhoea</div><div class="trend-bar-bg"><div class="trend-bar" style="width:30%;background:#EF9F27;"></div></div><div class="trend-num">34</div></div>
+<div class="trend-row"><div class="trend-lbl">Rash</div><div class="trend-bar-bg"><div class="trend-bar" style="width:18%;background:#7F77DD;"></div></div><div class="trend-num">20</div></div>
+<div class="trend-row"><div class="trend-lbl">Malnutrition</div><div class="trend-bar-bg"><div class="trend-bar" style="width:12%;background:#EF9F27;"></div></div><div class="trend-num">13</div></div>
+</div>
+</div>
+<div>
+<div class="card" style="margin-bottom:10px;">
+<div class="card-title">Live feed</div>
+<div class="feed-item"><div class="feed-dot" style="background:#E24B4A;"></div><div class="feed-text">F/35 Rampur · fever, breathlessness · referred PHC</div><div class="feed-time">9:42</div></div>
+<div class="feed-item"><div class="feed-dot" style="background:#EF9F27;"></div><div class="feed-text">M/8 Rampur · rash, fever · possible measles</div><div class="feed-time">9:45</div></div>
+<div class="feed-item"><div class="feed-dot" style="background:#1D9E75;"></div><div class="feed-text">F/28 Barsara · prenatal check · normal</div><div class="feed-time">9:50</div></div>
+<div class="feed-item"><div class="feed-dot" style="background:#1D9E75;"></div><div class="feed-text">M/60 Mau · diarrhoea · mild</div><div class="feed-time">9:55</div></div>
+<div class="feed-item"><div class="feed-dot" style="background:#E24B4A;"></div><div class="feed-text">F/4 Khajuri · fever 4 days · moderate</div><div class="feed-time">10:01</div></div>
+</div>
+<div class="card">
+<div class="card-title">CHW activity</div>
+<div class="chw-row"><div class="chw-av">SD</div><div style="flex:1;"><div class="chw-name">Seema Devi</div><div class="bar-bg"><div class="bar-f" style="width:85%;background:#1D9E75;"></div></div></div><span style="font-size:10px;color:#888;">12</span></div>
+<div class="chw-row"><div class="chw-av">PM</div><div style="flex:1;"><div class="chw-name">Priya Mishra</div><div class="bar-bg"><div class="bar-f" style="width:65%;background:#1D9E75;"></div></div></div><span style="font-size:10px;color:#888;">9</span></div>
+<div class="chw-row"><div class="chw-av">RK</div><div style="flex:1;"><div class="chw-name">Rama Kumari</div><div class="bar-bg"><div class="bar-f" style="width:30%;background:#EF9F27;"></div></div></div><span style="font-size:10px;color:#888;">4</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="sec">
+<div class="sec-label">Screen 2 — Alert detail + response playbook</div>
+<div class="browser-frame">
+<div class="browser-bar"><div class="dots"><div class="dot" style="background:#ff5f57;"></div><div class="dot" style="background:#ffbd2e;"></div><div class="dot" style="background:#28c840;"></div></div><div class="url">jansetu.health.in/alerts/clalert001</div></div>
+<div class="app">
+<div class="sidebar">
+<div class="sb-logo"><div class="sb-logo-title">Jansetu</div><div class="sb-logo-sub">Varanasi District</div></div>
+<div class="sb-nav">
+<div class="sb-item"><div class="sb-icon"></div><div class="sb-label">Dashboard</div></div>
+<div class="sb-item active"><div class="sb-icon red"></div><div class="sb-label">Alerts</div><div class="sb-badge">2</div></div>
+<div class="sb-item"><div class="sb-icon green"></div><div class="sb-label">Heatmap</div></div>
+<div class="sb-item"><div class="sb-icon"></div><div class="sb-label">Reports</div></div>
+<div class="sb-section">Response</div>
+<div class="sb-item"><div class="sb-icon amber"></div><div class="sb-label">Deploy teams</div></div>
+<div class="sb-item"><div class="sb-icon"></div><div class="sb-label">Broadcast</div></div>
+</div>
+</div>
+<div class="main">
+<div class="topbar">
+<div><div class="tb-title">Rampur cluster · ILI outbreak</div><div class="tb-sub">Detected 08:12 today · Gemma 4 27B analysis</div></div>
+<div class="tb-right"><span class="badge badge-r">Active</span><span class="badge badge-a">High confidence</span></div>
+</div>
+<div class="content">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+<div>
+<div class="card" style="margin-bottom:10px;">
+<div class="card-title">AI analysis — Gemma 4 27B</div>
+<div style="background:#FCEBEB;border-radius:7px;padding:10px;font-size:11px;color:#791F1F;line-height:1.6;margin-bottom:8px;">18 fever+cough cases detected across 3 geographically adjacent villages (Rampur, Barsara, Khajuri) within 72 hours. Case density: 6/day. Symptom pattern — high fever + dry cough + 2–4 day duration — is consistent with influenza-like illness. Confidence: HIGH. Spatial clustering rules out isolated incidents.</div>
+<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
+<span class="pill pill-r">Fever</span><span class="pill pill-r">Cough</span><span class="pill pill-a">18 cases</span><span class="pill pill-a">72 hrs</span><span class="pill pill-b">3 villages</span>
+</div>
+<div style="display:flex;gap:6px;">
+<div style="flex:1;background:#0C447C;border-radius:7px;padding:7px;text-align:center;font-size:11px;font-weight:500;color:#fff;cursor:pointer;">Deploy response team</div>
+<div style="flex:1;border:1px solid #E24B4A;border-radius:7px;padding:7px;text-align:center;font-size:11px;font-weight:500;color:#A32D2D;cursor:pointer;">Broadcast advisory</div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">Event timeline</div>
+<div class="tl-item"><div class="tl-dot" style="background:#E24B4A;"></div><div class="tl-body"><div class="tl-title">Outbreak detected · Gemma 4</div><div class="tl-time">Today 08:12</div><div class="tl-desc">Pattern identified across 3 villages. Alert auto-created.</div></div></div>
+<div class="tl-item"><div class="tl-dot" style="background:#EF9F27;"></div><div class="tl-body"><div class="tl-title">DHO notified</div><div class="tl-time">Today 08:13</div><div class="tl-desc">Push + SMS sent to Dr. Sharma.</div></div></div>
+<div class="tl-item"><div class="tl-dot" style="background:#1D9E75;"></div><div class="tl-body"><div class="tl-title">CHW broadcast sent</div><div class="tl-time">Today 09:15</div><div class="tl-desc">Advisory pushed to 12 CHWs in Rampur block.</div></div></div>
+</div>
+</div>
+<div>
+<div class="card" style="margin-bottom:10px;">
+<div class="card-title">Response playbook — AI generated</div>
+<div class="resp-step">
+<div class="step-num" style="background:#E24B4A;color:#fff;">1</div>
+<div class="step-body"><div class="step-title">Deploy rapid response to Rampur</div><div class="step-sub">Doctor + 2 nurses, ILI test kits, antipyretics, ORS</div><div class="step-status" style="background:#FCEBEB;color:#A32D2D;">Pending</div></div>
+</div>
+<div class="resp-step">
+<div class="step-num" style="background:#EF9F27;color:#fff;">2</div>
+<div class="step-body"><div class="step-title">Broadcast advisory to 3 villages</div><div class="step-sub">Hindi voice message via CHW phones</div><div class="step-status" style="background:#FAEEDA;color:#633806;">In progress</div></div>
+</div>
+<div class="resp-step">
+<div class="step-num" style="background:#1D9E75;color:#fff;">3</div>
+<div class="step-body"><div class="step-title">Increase CHW reporting 2x/day</div><div class="step-sub">Requested for 7 days in affected block</div><div class="step-status" style="background:#E1F5EE;color:#085041;">Done</div></div>
+</div>
+<div class="resp-step">
+<div class="step-num" style="background:#E6F1FB;color:#0C447C;">4</div>
+<div class="step-body"><div class="step-title">Escalate if &gt;30 cases in 48 hrs</div><div class="step-sub">Auto-draft CMO brief with Gemma 4</div><div class="step-status" style="background:#E6F1FB;color:#0C447C;">Auto-watch</div></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">Affected villages</div>
+<div class="trend-row"><div class="trend-lbl">Rampur</div><div class="trend-bar-bg"><div class="trend-bar" style="width:90%;background:#E24B4A;"></div></div><div class="trend-num" style="color:#A32D2D;">18</div></div>
+<div class="trend-row"><div class="trend-lbl">Barsara</div><div class="trend-bar-bg"><div class="trend-bar" style="width:55%;background:#EF9F27;"></div></div><div class="trend-num">11</div></div>
+<div class="trend-row"><div class="trend-lbl">Khajuri</div><div class="trend-bar-bg"><div class="trend-bar" style="width:38%;background:#EF9F27;"></div></div><div class="trend-num">8</div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="sec">
+<div class="sec-label">Screen 3 — Heatmap</div>
+<div class="browser-frame">
+<div class="browser-bar"><div class="dots"><div class="dot" style="background:#ff5f57;"></div><div class="dot" style="background:#ffbd2e;"></div><div class="dot" style="background:#28c840;"></div></div><div class="url">jansetu.health.in/heatmap</div></div>
+<div class="app">
+<div class="sidebar">
+<div class="sb-logo"><div class="sb-logo-title">Jansetu</div><div class="sb-logo-sub">Varanasi District</div></div>
+<div class="sb-nav">
+<div class="sb-item"><div class="sb-icon"></div><div class="sb-label">Dashboard</div></div>
+<div class="sb-item"><div class="sb-icon red"></div><div class="sb-label">Alerts</div><div class="sb-badge">2</div></div>
+<div class="sb-item active"><div class="sb-icon green"></div><div class="sb-label">Heatmap</div></div>
+<div class="sb-item"><div class="sb-icon"></div><div class="sb-label">Reports</div></div>
+<div class="sb-section">Response</div>
+<div class="sb-item"><div class="sb-icon amber"></div><div class="sb-label">Deploy teams</div></div>
+<div class="sb-item"><div class="sb-icon"></div><div class="sb-label">Broadcast</div></div>
+</div>
+</div>
+<div class="main">
+<div class="topbar">
+<div><div class="tb-title">Symptom heatmap</div><div class="tb-sub">All villages · Varanasi district</div></div>
+<div class="tb-right">
+<span class="badge badge-r" style="cursor:pointer;">Fever/cough</span>
+<span class="badge" style="background:#f0f0f0;color:#666;font-size:10px;padding:3px 9px;border-radius:6px;cursor:pointer;">Diarrhoea</span>
+<span class="badge" style="background:#f0f0f0;color:#666;font-size:10px;padding:3px 9px;border-radius:6px;cursor:pointer;">Rash</span>
+<select style="font-size:11px;padding:3px 7px;border:1px solid #E5E5E5;border-radius:6px;background:#fff;color:#555;">
+<option>Last 7 days</option><option>Last 24h</option><option>Last 30 days</option>
+</select>
+</div>
+</div>
+<div class="content" style="display:grid;grid-template-columns:1fr 240px;gap:10px;">
+<div class="map-ph" style="height:340px;">
+<div style="position:absolute;inset:0;background:#c8dfa8;"></div>
+<div class="map-road" style="height:3px;top:45%;left:0;right:0;"></div>
+<div class="map-road" style="height:3px;top:70%;left:0;right:0;"></div>
+<div class="map-road" style="width:3px;top:0;bottom:0;left:35%;"></div>
+<div class="map-road" style="width:3px;top:0;bottom:0;left:65%;"></div>
+<div class="cluster" style="width:40px;height:40px;background:rgba(226,75,74,0.85);top:38%;left:30%;">18</div>
+<div class="cluster" style="width:30px;height:30px;background:rgba(226,75,74,0.75);top:42%;left:40%;">11</div>
+<div class="cluster" style="width:24px;height:24px;background:rgba(239,159,39,0.8);top:55%;left:55%;">6</div>
+<div class="cluster" style="width:16px;height:16px;background:rgba(99,153,34,0.8);top:65%;left:22%;">3</div>
+<div class="cluster" style="width:14px;height:14px;background:rgba(99,153,34,0.8);top:28%;left:60%;">2</div>
+<div class="cluster" style="width:12px;height:12px;background:rgba(99,153,34,0.6);top:72%;left:72%;">1</div>
+<div style="position:absolute;top:8px;left:8px;background:rgba(255,255,255,0.95);border-radius:7px;padding:6px 8px;">
+<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#333;margin-bottom:3px;"><div style="width:10px;height:10px;border-radius:50%;background:rgba(226,75,74,0.85);"></div>Outbreak (18+)</div>
+<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#333;margin-bottom:3px;"><div style="width:10px;height:10px;border-radius:50%;background:rgba(239,159,39,0.8);"></div>Watch (5–17)</div>
+<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#333;"><div style="width:10px;height:10px;border-radius:50%;background:rgba(99,153,34,0.8);"></div>Normal (&lt;5)</div>
+</div>
+<div style="position:absolute;bottom:32%;right:8%;background:rgba(255,255,255,0.95);border-radius:7px;padding:8px 10px;min-width:110px;">
+<div style="font-size:11px;font-weight:500;color:#A32D2D;margin-bottom:4px;">Rampur</div>
+<div style="font-size:10px;color:#666;margin-bottom:2px;">18 cases · 72 hrs</div>
+<div style="font-size:10px;color:#666;margin-bottom:4px;">Top: fever, cough</div>
+<div style="background:#E24B4A;border-radius:5px;padding:4px 8px;text-align:center;font-size:10px;font-weight:500;color:#fff;cursor:pointer;">View alert</div>
+</div>
+</div>
+<div>
+<div class="card" style="margin-bottom:10px;">
+<div class="card-title">Village ranking</div>
+<div class="trend-row"><div class="trend-lbl">Rampur</div><div class="trend-bar-bg"><div class="trend-bar" style="width:90%;background:#E24B4A;"></div></div><div class="trend-num" style="color:#A32D2D;">18</div></div>
+<div class="trend-row"><div class="trend-lbl">Barsara</div><div class="trend-bar-bg"><div class="trend-bar" style="width:55%;background:#E24B4A;"></div></div><div class="trend-num" style="color:#A32D2D;">11</div></div>
+<div class="trend-row"><div class="trend-lbl">Mau</div><div class="trend-bar-bg"><div class="trend-bar" style="width:30%;background:#EF9F27;"></div></div><div class="trend-num">6</div></div>
+<div class="trend-row"><div class="trend-lbl">Cholapur</div><div class="trend-bar-bg"><div class="trend-bar" style="width:15%;background:#639922;"></div></div><div class="trend-num">3</div></div>
+<div class="trend-row"><div class="trend-lbl">Saidpur</div><div class="trend-bar-bg"><div class="trend-bar" style="width:10%;background:#639922;"></div></div><div class="trend-num">2</div></div>
+</div>
+<div class="card">
+<div class="card-title">District totals</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+<div style="background:#f5f5f5;border-radius:7px;padding:8px;text-align:center;"><div style="font-size:18px;font-weight:500;color:#111;">247</div><div style="font-size:10px;color:#888;margin-top:2px;">Total cases</div></div>
+<div style="background:#FCEBEB;border-radius:7px;padding:8px;text-align:center;"><div style="font-size:18px;font-weight:500;color:#A32D2D;">2</div><div style="font-size:10px;color:#A32D2D;margin-top:2px;">Outbreak zones</div></div>
+<div style="background:#f5f5f5;border-radius:7px;padding:8px;text-align:center;"><div style="font-size:18px;font-weight:500;color:#111;">63</div><div style="font-size:10px;color:#888;margin-top:2px;">Villages active</div></div>
+<div style="background:#E1F5EE;border-radius:7px;padding:8px;text-align:center;"><div style="font-size:18px;font-weight:500;color:#085041;">47</div><div style="font-size:10px;color:#085041;margin-top:2px;">CHWs online</div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="sec">
+<div class="sec-label">Screen 4 — Broadcast composer</div>
+<div class="browser-frame">
+<div class="browser-bar"><div class="dots"><div class="dot" style="background:#ff5f57;"></div><div class="dot" style="background:#ffbd2e;"></div><div class="dot" style="background:#28c840;"></div></div><div class="url">jansetu.health.in/broadcast</div></div>
+<div class="app">
+<div class="sidebar">
+<div class="sb-logo"><div class="sb-logo-title">Jansetu</div><div class="sb-logo-sub">Varanasi District</div></div>
+<div class="sb-nav">
+<div class="sb-item"><div class="sb-icon"></div><div class="sb-label">Dashboard</div></div>
+<div class="sb-item"><div class="sb-icon red"></div><div class="sb-label">Alerts</div><div class="sb-badge">2</div></div>
+<div class="sb-item"><div class="sb-icon green"></div><div class="sb-label">Heatmap</div></div>
+<div class="sb-section">Response</div>
+<div class="sb-item"><div class="sb-icon amber"></div><div class="sb-label">Deploy teams</div></div>
+<div class="sb-item active"><div class="sb-icon"></div><div class="sb-label">Broadcast</div></div>
+</div>
+</div>
+<div class="main">
+<div class="topbar">
+<div><div class="tb-title">Broadcast health advisory</div><div class="tb-sub">Gemma 4 drafts · you review · you send</div></div>
+</div>
+<div class="content">
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+<div class="card">
+<div class="card-title">1. Select target areas</div>
+<div style="margin-bottom:8px;">
+<div style="font-size:10px;color:#888;margin-bottom:5px;font-weight:500;">Blocks</div>
+<label class="form-label"><input type="checkbox" checked> Rampur block (12 CHWs)</label>
+<label class="form-label"><input type="checkbox" checked> Mau block (8 CHWs)</label>
+<label class="form-label"><input type="checkbox"> Khajuri block (6 CHWs)</label>
+<label class="form-label"><input type="checkbox"> All Varanasi (47 CHWs)</label>
+</div>
+<div style="height:0.5px;background:#E5E5E5;margin:8px 0;"></div>
+<div style="font-size:10px;color:#888;margin-bottom:5px;font-weight:500;">Channel</div>
+<label class="form-label"><input type="radio" name="ch" checked> App push to CHW phones</label>
+<label class="form-label"><input type="radio" name="ch"> SMS (104 gateway)</label>
+<label class="form-label"><input type="radio" name="ch"> Both</label>
+<div style="height:0.5px;background:#E5E5E5;margin:8px 0;"></div>
+<div style="font-size:10px;color:#888;margin-bottom:5px;font-weight:500;">Linked alert (optional)</div>
+<select style="width:100%;font-size:11px;padding:5px 8px;border:1px solid #E5E5E5;border-radius:6px;background:#fff;color:#555;">
+<option>Rampur cluster — ILI outbreak</option>
+<option>None</option>
+</select>
+</div>
+<div class="card">
+<div class="card-title">2. AI-drafted message (Hindi)</div>
+<div style="background:#E6F1FB;border-radius:6px;padding:6px 9px;font-size:10px;color:#0C447C;margin-bottom:7px;">Gemma 4 27B · generated from outbreak context</div>
+<div class="msg-box" style="margin-bottom:7px;">रामपुर और आसपास के गाँवों में बुखार-खाँसी के मामले बढ़ रहे हैं। कृपया घर पर रहें, खूब पानी पिएं। बुखार होने पर PHC जाएं। घबराएं नहीं — स्वास्थ्य टीम आ रही है।</div>
+<div style="font-size:10px;color:#888;margin-bottom:4px;font-weight:500;">English (for records)</div>
+<div class="msg-box" style="font-size:10px;">Fever and cough cases are rising in Rampur and nearby villages. Please stay home, drink plenty of water. Visit PHC if you have fever. Do not panic — health team is coming.</div>
+</div>
+<div class="card">
+<div class="card-title">3. Preview + send</div>
+<div style="background:#f9f9f9;border-radius:8px;padding:10px;margin-bottom:8px;">
+<div style="font-size:10px;font-weight:500;color:#333;margin-bottom:4px;">Summary</div>
+<div style="font-size:11px;color:#555;line-height:1.6;">Sending to: <span style="font-weight:500;">20 CHWs</span><br>Channel: <span style="font-weight:500;">App push</span><br>Estimated reach: <span style="font-weight:500;">~3,400 village people</span><br>Linked alert: <span style="font-weight:500;">Rampur cluster</span></div>
+</div>
+<div style="background:#0C447C;border-radius:8px;padding:10px;text-align:center;cursor:pointer;margin-bottom:6px;">
+<div style="font-size:12px;font-weight:500;color:#fff;">Send broadcast now</div>
+</div>
+<div style="border:1px solid #E5E5E5;border-radius:8px;padding:8px;text-align:center;cursor:pointer;margin-bottom:8px;">
+<div style="font-size:11px;color:#666;">Schedule for later</div>
+</div>
+<div style="background:#E1F5EE;border-radius:7px;padding:8px;">
+<div style="font-size:10px;color:#085041;line-height:1.5;">All AI-generated messages are logged. You can edit before sending. SMS via 104 gateway is free.</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="sec">
+<div class="sec-label">Screen 5 — Reports table</div>
+<div class="browser-frame">
+<div class="browser-bar"><div class="dots"><div class="dot" style="background:#ff5f57;"></div><div class="dot" style="background:#ffbd2e;"></div><div class="dot" style="background:#28c840;"></div></div><div class="url">jansetu.health.in/reports</div></div>
+<div class="app">
+<div class="sidebar">
+<div class="sb-logo"><div class="sb-logo-title">Jansetu</div><div class="sb-logo-sub">Varanasi District</div></div>
+<div class="sb-nav">
+<div class="sb-item"><div class="sb-icon"></div><div class="sb-label">Dashboard</div></div>
+<div class="sb-item"><div class="sb-icon red"></div><div class="sb-label">Alerts</div><div class="sb-badge">2</div></div>
+<div class="sb-item"><div class="sb-icon green"></div><div class="sb-label">Heatmap</div></div>
+<div class="sb-item active"><div class="sb-icon"></div><div class="sb-label">Reports</div></div>
+<div class="sb-section">Response</div>
+<div class="sb-item"><div class="sb-icon amber"></div><div class="sb-label">Deploy teams</div></div>
+<div class="sb-item"><div class="sb-icon"></div><div class="sb-label">Broadcast</div></div>
+</div>
+</div>
+<div class="main">
+<div class="topbar">
+<div><div class="tb-title">All reports</div><div class="tb-sub">247 today · 1,840 this week</div></div>
+<div class="tb-right">
+<select style="font-size:11px;padding:3px 7px;border:1px solid #E5E5E5;border-radius:6px;background:#fff;color:#555;"><option>All villages</option><option>Rampur</option><option>Barsara</option></select>
+<select style="font-size:11px;padding:3px 7px;border:1px solid #E5E5E5;border-radius:6px;background:#fff;color:#555;"><option>All symptoms</option><option>Fever</option><option>Cough</option></select>
+<select style="font-size:11px;padding:3px 7px;border:1px solid #E5E5E5;border-radius:6px;background:#fff;color:#555;"><option>All sources</option><option>CHW</option><option>Village user</option></select>
+<div style="background:#0C447C;border-radius:6px;padding:4px 10px;font-size:11px;color:#fff;cursor:pointer;">Export CSV</div>
+</div>
+</div>
+<div class="content">
+<div class="card" style="padding:0;overflow:hidden;">
+<table class="data">
+<thead><tr><th>Time</th><th>Village</th><th>Source</th><th>Patient</th><th>Symptoms</th><th>Severity</th><th>Referral</th></tr></thead>
+<tbody>
+<tr><td>09:42</td><td>Rampur</td><td><span class="pill pill-b">CHW</span></td><td>F / adult</td><td><span class="pill pill-r">fever</span><span class="pill pill-r">cough</span><span class="pill pill-r">breathlessness</span></td><td><span class="pill pill-a">moderate</span></td><td><span class="pill pill-r">Yes</span></td></tr>
+<tr><td>09:45</td><td>Rampur</td><td><span class="pill pill-b">CHW</span></td><td>M / child</td><td><span class="pill pill-r">rash</span><span class="pill pill-r">fever</span></td><td><span class="pill pill-a">moderate</span></td><td><span class="pill pill-r">Yes</span></td></tr>
+<tr><td>09:50</td><td>Barsara</td><td><span class="pill" style="background:#E1F5EE;color:#085041;">Village</span></td><td>F / adult</td><td><span class="pill pill-b">cough</span></td><td><span class="pill pill-g">mild</span></td><td><span class="pill pill-g">No</span></td></tr>
+<tr><td>09:55</td><td>Mau</td><td><span class="pill pill-b">CHW</span></td><td>M / elderly</td><td><span class="pill pill-a">diarrhoea</span><span class="pill pill-a">vomiting</span></td><td><span class="pill pill-a">moderate</span></td><td><span class="pill pill-g">No</span></td></tr>
+<tr><td>10:01</td><td>Khajuri</td><td><span class="pill" style="background:#E1F5EE;color:#085041;">Village</span></td><td>F / child</td><td><span class="pill pill-r">fever</span><span class="pill pill-b">headache</span></td><td><span class="pill pill-a">moderate</span></td><td><span class="pill pill-g">No</span></td></tr>
+<tr><td>10:08</td><td>Rampur</td><td><span class="pill pill-b">CHW</span></td><td>F / adult</td><td><span class="pill pill-r">fever</span><span class="pill pill-r">cough</span></td><td><span class="pill pill-g">mild</span></td><td><span class="pill pill-g">No</span></td></tr>
+</tbody>
+</table>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid #f5f5f5;">
+<div style="font-size:11px;color:#888;">Showing 1–6 of 247</div>
+<div style="display:flex;gap:4px;">
+<div style="padding:4px 8px;border:1px solid #E5E5E5;border-radius:5px;font-size:11px;color:#555;cursor:pointer;">← Prev</div>
+<div style="padding:4px 8px;background:#0C447C;border-radius:5px;font-size:11px;color:#fff;cursor:pointer;">Next →</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>

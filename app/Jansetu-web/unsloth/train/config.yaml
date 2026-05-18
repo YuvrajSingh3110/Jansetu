@@ -1,0 +1,50 @@
+# Jansetu E4B Fine-tuning Configuration
+# NOTE: "google/gemma-4-e4b-it" is the intended model name for Gemma 4 E4B.
+# If it is not yet available on HuggingFace under this exact ID, update this field.
+# Fallback for pipeline testing: "google/gemma-2-2b-it"
+
+model:
+  name: "google/gemma-4-e4b-it"
+  # fallback: "google/gemma-2-2b-it"
+  max_seq_length: 512
+  load_in_4bit: true
+  dtype: null  # null = auto-detect (bfloat16 on Ampere+, float16 otherwise)
+
+lora:
+  r: 16
+  alpha: 16
+  dropout: 0.0
+  bias: "none"
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+
+training:
+  batch_size: 2
+  gradient_accumulation_steps: 4
+  warmup_steps: 10
+  max_steps: 300
+  learning_rate: 2.0e-4
+  fp16: false
+  bf16: false  # auto-detected from hardware in finetune.py
+  logging_steps: 10
+  eval_steps: 50
+  save_steps: 100
+  output_dir: "./outputs/jansetu-e4b-finetuned"
+  seed: 42
+
+dataset:
+  train_file: "../dataset/jansetu_symptoms_train.jsonl"
+  eval_file: "../dataset/jansetu_symptoms_eval.jsonl"
+  train_on_responses_only: true
+
+export:
+  output_dir: "./outputs/jansetu-e4b-final"
+  save_method: "merged_16bit"  # for LiteRT conversion
+  push_to_hub: false
+  hub_model_id: ""  # fill in if pushing to HuggingFace Hub

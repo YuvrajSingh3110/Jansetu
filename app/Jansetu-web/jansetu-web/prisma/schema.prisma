@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model District {
+  id        String    @id @default(cuid())
+  name      String
+  state     String
+  blocks    Block[]
+  officers  Officer[]
+  alerts    Alert[]
+  createdAt DateTime  @default(now())
+}
+
+model Block {
+  id         String    @id @default(cuid())
+  name       String
+  district   District  @relation(fields: [districtId], references: [id])
+  districtId String
+  villages   Village[]
+  chws       CHW[]
+}
+
+model Village {
+  id      String   @id @default(cuid())
+  name    String
+  lat     Float
+  lng     Float
+  block   Block    @relation(fields: [blockId], references: [id])
+  blockId String
+  reports Report[]
+}
+
+model CHW {
+  id           String    @id @default(cuid())
+  name         String
+  employeeId   String    @unique
+  phone        String?
+  block        Block     @relation(fields: [blockId], references: [id])
+  blockId      String
+  lastSyncAt   DateTime?
+  reportsCount Int       @default(0)
+  isActive     Boolean   @default(true)
+  reports      Report[]
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  sourceType String
+  village    Village  @relation(fields: [villageId], references: [id])
+  villageId  String
+  chw        CHW?     @relation(fields: [chwId], references: [id])
+  chwId      String?
+  ageGroup   String
+  gender     String
+  symptoms   String[]
+  duration   Int?
+  severity   String
+  hasPhoto   Boolean  @default(false)
+  referral   Boolean  @default(false)
+  syncedAt   DateTime @default(now())
+  reportedAt DateTime
+}
+
+model Alert {
+  id               String           @id @default(cuid())
+  district         District         @relation(fields: [districtId], references: [id])
+  districtId       String
+  type             String
+  confidence       String
+  title            String
+  description      String
+  affectedVillages String[]
+  symptomCluster   String[]
+  caseCount        Int
+  timeWindowHrs    Int
+  aggregatedInput  Json
+  aiAnalysis       Json
+  status           String           @default("active")
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  actions          ResponseAction[]
+  broadcasts       Broadcast[]
+}
+
+model ResponseAction {
+  id          String    @id @default(cuid())
+  alert       Alert     @relation(fields: [alertId], references: [id])
+  alertId     String
+  step        Int
+  title       String
+  description String
+  status      String    @default("pending")
+  assignedTo  String?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model Broadcast {
+  id         String    @id @default(cuid())
+  alert      Alert?    @relation(fields: [alertId], references: [id])
+  alertId    String?
+  targetType String
+  targetIds  String[]
+  messageHi  String
+  messageEn  String
+  channel    String[]
+  sentAt     DateTime?
+  status     String    @default("draft")
+  createdAt  DateTime  @default(now())
+}
+
+model Officer {
+  id         String   @id @default(cuid())
+  name       String
+  email      String   @unique
+  password   String
+  role       String
+  district   District @relation(fields: [districtId], references: [id])
+  districtId String
+  createdAt  DateTime @default(now())
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  label     String
+  updatedAt DateTime @updatedAt
+}
